@@ -1,0 +1,43 @@
+{
+  "reference_type": "scene_shot_metadata_extracted",
+  "wall_text": "MOBIL AVE",
+  "tags": ["lonely", "horizontal lines", "mobil ave", "waiting for train", "left behind", "straight lines", "looking for someone", "minimalist", "minimalism", "white walls", "purgatory"],
+  "genre": ["Action", "Adventure", "Science Fiction", "Thriller", "Cyberpunk", "Martial Arts", "Satire", "Technology", "Artificial Intelligence", "Political", "War", "Dystopian", "Science-Fiction"],
+  "director": ["Andy Wachowski", "Lana Wachowski"],
+  "cinematographer": "Bill Pope",
+  "production_designer": "Owen Paterson",
+  "costume_designer": "Kym Barrett",
+  "editor": "Zach Staenberg",
+  "colorist": "David Orr",
+  "actors": ["Keanu Reeves"],
+  "shot_time": "00:23:53",
+  "time_period": "Future",
+  "visuals": {
+    "color": ["Cool", "Desaturated", "Green", "Cyan"],
+    "palette_hex": ["#000000", "#0A140F", "#13291F", "#25402E", "#4A4537", "#556B57", "#748A76", "#8FA195", "#A8B6A8", "#BFCBC1", "#D9E0D9", "#EEF2EE", "#FFFFFF"],
+    "palette_note": "[Unverified approximation] Exact HEX values unverifiable without pixel analysis tool. Swatches show cool desaturated green-cyan gradient from black to white"
+  },
+  "cinematography": {
+    "aspect_ratio": "2.39 - Super 35",
+    "format": "Film - 35mm",
+    "frame_size": "Wide",
+    "shot_type": "Clean single",
+    "lens_size": "Wide",
+    "composition": ["Center", "Symmetrical"]
+  },
+  "lighting": {
+    "description": ["Soft light", "Low contrast", "Backlight"],
+    "type": "Artificial light"
+  },
+  "time_of_day": "Night",
+  "interior_exterior": "Interior",
+  "location_type": "Stage",
+  "set": "Subway Station > Platform",
+  "story_location": "North America > Mega City",
+  "filming_location": "Australia > Sydney",
+  "equipment": {
+    "camera": ["Arriflex 435", "Panavision Panaflex"],
+    "lens": ["Panavision Primo Primes", "Panavision Primo Zooms"],
+    "film_stock": ["5274/7274 Vision 200T", "5297/7297 EXR 250D"]
+  }
+}
