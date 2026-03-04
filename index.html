@@ -1,0 +1,4622 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nano Banana Pro — Cinema Image Studio</title>
+  <style>
+    :root {
+      --bg-base: #0A0A0B;
+      --bg-card: #111215;
+      --bg-elevated: #18191F;
+      --border: #222430;
+      --border-hover: rgba(245, 255, 59, .3);
+      --text-primary: #FFFFFF;
+      --text-secondary: #7A7D8E;
+      --text-muted: #44475A;
+      --accent: #F5FF3B;
+      --accent-dim: rgba(245, 255, 59, .10);
+      --accent-border: rgba(245, 255, 59, .30);
+      --red: #FF4D4D;
+      --green: #3DFF85;
+      --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    }
+
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html,
+    body {
+      height: 100%;
+      background: var(--bg-base);
+      color: var(--text-primary);
+      font-family: var(--font);
+      font-size: 13px;
+      overflow: hidden;
+    }
+
+    /* ── App shell ── */
+    .app {
+      display: grid;
+      grid-template-rows: 48px 1fr;
+      height: 100vh;
+    }
+
+    /* ── Header ── */
+    .header {
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      gap: 14px;
+      background: var(--bg-card);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 700;
+      font-size: 14px;
+      letter-spacing: -.3px;
+      user-select: none;
+    }
+
+    .logo-icon {
+      background: var(--accent);
+      color: #000;
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+    }
+
+    .logo-text span {
+      color: var(--accent);
+    }
+
+    .header-tabs {
+      display: flex;
+      gap: 3px;
+      margin-left: 12px;
+    }
+
+    .tab {
+      padding: 5px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      color: var(--text-secondary);
+      font-size: 12px;
+      font-weight: 500;
+      transition: all .15s;
+      border: none;
+      background: none;
+      font-family: var(--font);
+    }
+
+    .tab.active {
+      background: var(--bg-elevated);
+      color: var(--text-primary);
+    }
+
+    .tab:hover:not(.active) {
+      color: var(--text-primary);
+    }
+
+    .header-right {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--accent);
+      background: var(--accent-dim);
+      border: 1px solid var(--accent-border);
+      border-radius: 4px;
+      padding: 2px 7px;
+    }
+
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    .dot-green {
+      background: var(--green);
+      box-shadow: 0 0 6px var(--green);
+    }
+
+    .dot-red {
+      background: var(--red);
+      box-shadow: 0 0 6px var(--red);
+    }
+
+    /* API key inline input */
+    .apikey-wrap {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .apikey-input {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 5px 10px;
+      color: var(--text-primary);
+      font-size: 11px;
+      font-family: var(--font);
+      outline: none;
+      width: 210px;
+      letter-spacing: .5px;
+    }
+
+    .apikey-input:focus {
+      border-color: var(--accent);
+    }
+
+    .apikey-input::placeholder {
+      color: var(--text-muted);
+      letter-spacing: 0;
+    }
+
+    .apikey-toggle {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--text-muted);
+      font-size: 13px;
+      padding: 0 2px;
+      transition: color .15s;
+    }
+
+    .apikey-toggle:hover {
+      color: var(--text-secondary);
+    }
+
+    /* ── Main layout ── */
+    .main {
+      display: grid;
+      grid-template-columns: 276px 1fr 256px;
+      overflow: hidden;
+    }
+
+    /* ── Panels ── */
+    .panel {
+      overflow-y: auto;
+      border-right: 1px solid var(--border);
+    }
+
+    .panel:last-child {
+      border-right: none;
+    }
+
+    .panel::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    .panel::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 2px;
+    }
+
+    .section {
+      padding: 11px 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .sec-label {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: .8px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 9px;
+    }
+
+    /* ── Camera cards ── */
+    .camera-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 5px;
+    }
+
+    .camera-card {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px;
+      cursor: pointer;
+      transition: all .15s;
+    }
+
+    .camera-card:hover {
+      border-color: var(--border-hover);
+    }
+
+    .camera-card.active {
+      border-color: var(--accent);
+      background: var(--accent-dim);
+    }
+
+    .cam-brand {
+      font-size: 9px;
+      color: var(--text-muted);
+      font-weight: 600;
+      letter-spacing: .5px;
+      text-transform: uppercase;
+    }
+
+    .cam-name {
+      font-size: 11px;
+      color: var(--text-primary);
+      font-weight: 600;
+      line-height: 1.3;
+      margin-top: 2px;
+    }
+
+    .cam-spec {
+      font-size: 9px;
+      color: var(--accent);
+      margin-top: 2px;
+    }
+
+    /* ── Lens cards ── */
+    .lens-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 5px;
+    }
+
+    .lens-card {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      padding: 7px 8px;
+      cursor: pointer;
+      transition: all .15s;
+    }
+
+    .lens-card:hover {
+      border-color: var(--border-hover);
+    }
+
+    .lens-card.active {
+      border-color: var(--accent);
+      background: var(--accent-dim);
+    }
+
+    .lens-brand {
+      font-size: 9px;
+      color: var(--text-muted);
+      font-weight: 600;
+      letter-spacing: .5px;
+      text-transform: uppercase;
+    }
+
+    .lens-name {
+      font-size: 10px;
+      color: var(--text-primary);
+      font-weight: 600;
+      margin-top: 1px;
+      line-height: 1.2;
+    }
+
+    .lens-char {
+      font-size: 9px;
+      color: var(--text-secondary);
+      margin-top: 2px;
+    }
+
+    /* ── Slider row ── */
+    .slider-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .sl-label {
+      font-size: 11px;
+      color: var(--text-secondary);
+      width: 44px;
+      flex-shrink: 0;
+    }
+
+    .sl-value {
+      font-size: 11px;
+      color: var(--accent);
+      width: 52px;
+      text-align: right;
+      flex-shrink: 0;
+      font-weight: 600;
+    }
+
+    input[type="range"] {
+      flex: 1;
+      height: 3px;
+      border-radius: 2px;
+      outline: none;
+      cursor: pointer;
+      appearance: none;
+      -webkit-appearance: none;
+      background: linear-gradient(to right, var(--accent) var(--pct, 30%), var(--border) var(--pct, 30%));
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      appearance: none;
+      -webkit-appearance: none;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: var(--accent);
+      cursor: pointer;
+    }
+
+    /* ── Pill group ── */
+    .pill-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+    }
+
+    .pill {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      padding: 4px 10px;
+      cursor: pointer;
+      color: var(--text-secondary);
+      font-size: 11px;
+      font-family: var(--font);
+      transition: all .15s;
+    }
+
+    .pill:hover {
+      border-color: var(--border-hover);
+      color: var(--text-primary);
+    }
+
+    .pill.active {
+      border-color: var(--accent);
+      background: var(--accent-dim);
+      color: var(--accent);
+    }
+
+    /* ── Scroll row ── */
+    .scroll-x {
+      overflow-x: auto;
+      padding-bottom: 3px;
+    }
+
+    .scroll-x::-webkit-scrollbar {
+      height: 3px;
+    }
+
+    .scroll-x::-webkit-scrollbar-thumb {
+      background: var(--border);
+    }
+
+    .inline-flex {
+      display: inline-flex;
+      gap: 5px;
+    }
+
+    /* ── Aspect grid ── */
+    .aspect-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+    }
+
+    .aspect-btn {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 5px 7px;
+      cursor: pointer;
+      color: var(--text-secondary);
+      font-size: 10px;
+      font-family: var(--font);
+      font-weight: 500;
+      transition: all .15s;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+    }
+
+    .aspect-btn:hover {
+      border-color: var(--border-hover);
+      color: var(--text-primary);
+    }
+
+    .aspect-btn.active {
+      border-color: var(--accent);
+      background: var(--accent-dim);
+      color: var(--accent);
+    }
+
+    .ar-preview {
+      background: var(--text-muted);
+      border-radius: 1px;
+      opacity: .5;
+    }
+
+    /* ── Resolution tier buttons ── */
+    .res-tier-group {
+      display: flex;
+      gap: 6px;
+    }
+
+    .res-tier-btn {
+      flex: 1;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 4px;
+      cursor: pointer;
+      color: var(--text-secondary);
+      font-family: var(--font);
+      text-align: center;
+      transition: all .15s;
+    }
+
+    .res-tier-btn:hover {
+      border-color: var(--border-hover);
+      color: var(--text-primary);
+    }
+
+    .res-tier-btn.active {
+      border-color: var(--accent);
+      background: var(--accent-dim);
+      color: var(--accent);
+    }
+
+    .res-tier-label {
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .res-tier-sub {
+      font-size: 9px;
+      color: inherit;
+      opacity: .7;
+      margin-top: 2px;
+    }
+
+    /* ── Output format ── */
+    .fmt-group {
+      display: flex;
+      gap: 5px;
+      margin-top: 8px;
+    }
+
+    .fmt-btn {
+      flex: 1;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 6px;
+      cursor: pointer;
+      color: var(--text-secondary);
+      font-size: 11px;
+      font-weight: 600;
+      font-family: var(--font);
+      text-align: center;
+      transition: all .15s;
+    }
+
+    .fmt-btn:hover {
+      border-color: var(--border-hover);
+      color: var(--text-primary);
+    }
+
+    .fmt-btn.active {
+      border-color: var(--accent);
+      background: var(--accent-dim);
+      color: var(--accent);
+    }
+
+    /* ── Center panel ── */
+    .center-panel {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .preview-area {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #070709;
+      overflow: hidden;
+      position: relative;
+      min-height: 0;
+    }
+
+    .preview-canvas {
+      position: relative;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      overflow: hidden;
+      background: var(--bg-card);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: width .2s, height .2s;
+    }
+
+    .preview-canvas img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+    }
+
+    .preview-placeholder {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      color: var(--text-muted);
+      padding: 20px;
+      text-align: center;
+    }
+
+    .preview-placeholder svg {
+      opacity: .25;
+    }
+
+    .preview-loading {
+      position: absolute;
+      inset: 0;
+      background: rgba(7, 7, 9, .85);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .spinner {
+      width: 36px;
+      height: 36px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin .8s linear infinite;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    .loading-status {
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    .img-overlay {
+      position: absolute;
+      bottom: 10px;
+      right: 10px;
+      display: flex;
+      gap: 6px;
+      opacity: 0;
+      transition: opacity .2s;
+    }
+
+    .preview-canvas:hover .img-overlay {
+      opacity: 1;
+    }
+
+    .overlay-btn {
+      background: rgba(0, 0, 0, .8);
+      border: 1px solid rgba(255, 255, 255, .12);
+      border-radius: 6px;
+      padding: 5px 10px;
+      cursor: pointer;
+      color: white;
+      font-size: 11px;
+      font-family: var(--font);
+      backdrop-filter: blur(4px);
+    }
+
+    .overlay-btn:hover {
+      background: var(--accent);
+      color: #000;
+    }
+
+    /* Fullscreen overlay */
+    .fullscreen-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      background: rgba(0, 0, 0, .95);
+      align-items: center;
+      justify-content: center;
+      cursor: grab;
+    }
+    .fullscreen-overlay.active {
+      display: flex;
+    }
+    .fullscreen-overlay.dragging {
+      cursor: grabbing;
+    }
+    .fullscreen-overlay img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      transform-origin: center center;
+      transition: transform 0.1s ease-out;
+      user-select: none;
+      -webkit-user-drag: none;
+    }
+    .fullscreen-close {
+      position: fixed;
+      top: 16px;
+      right: 16px;
+      z-index: 10000;
+      background: rgba(0, 0, 0, .7);
+      border: 1px solid rgba(255, 255, 255, .15);
+      border-radius: 8px;
+      padding: 6px 14px;
+      color: #fff;
+      font-size: 13px;
+      font-family: var(--font);
+      cursor: pointer;
+      backdrop-filter: blur(4px);
+    }
+    .fullscreen-close:hover {
+      background: var(--accent);
+      color: #000;
+    }
+    .fullscreen-zoom-hint {
+      position: fixed;
+      bottom: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10000;
+      color: rgba(255,255,255,.4);
+      font-size: 11px;
+      font-family: var(--font);
+      pointer-events: none;
+    }
+
+    /* ── Reference images upload ── */
+    .ref-upload-zone {
+      border: 1.5px dashed var(--border);
+      border-radius: 6px;
+      padding: 12px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color .15s, background .15s;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+    .ref-upload-zone:hover, .ref-upload-zone.dragover {
+      border-color: var(--accent);
+      background: rgba(168,131,255,.06);
+    }
+    .ref-thumbs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 8px;
+    }
+    .ref-thumb {
+      position: relative;
+      width: 56px;
+      height: 56px;
+      border-radius: 5px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+    .ref-thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .ref-thumb-remove {
+      position: absolute;
+      top: 2px;
+      right: 2px;
+      width: 16px;
+      height: 16px;
+      background: rgba(0,0,0,.75);
+      border: none;
+      border-radius: 50%;
+      color: #fff;
+      font-size: 10px;
+      line-height: 16px;
+      text-align: center;
+      cursor: pointer;
+      padding: 0;
+      opacity: 0;
+      transition: opacity .15s;
+    }
+    .ref-thumb:hover .ref-thumb-remove {
+      opacity: 1;
+    }
+
+    .prompt-block {
+      padding: 11px 12px;
+      border-top: 1px solid var(--border);
+    }
+
+    .prompt-label {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: .6px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    .prompt-textarea {
+      width: 100%;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 9px 11px;
+      color: var(--text-primary);
+      font-size: 13px;
+      font-family: var(--font);
+      resize: none;
+      outline: none;
+      line-height: 1.5;
+      transition: border-color .15s;
+    }
+
+    .prompt-textarea:focus {
+      border-color: var(--accent);
+    }
+
+    .prompt-textarea::placeholder {
+      color: var(--text-muted);
+    }
+
+
+    .error-msg {
+      background: rgba(255, 77, 77, .1);
+      border: 1px solid rgba(255, 77, 77, .3);
+      border-radius: 6px;
+      padding: 7px 10px;
+      color: var(--red);
+      font-size: 11px;
+      margin-top: 8px;
+    }
+
+    /* ── Film grid ── */
+    .film-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 5px;
+    }
+
+    .film-card {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      padding: 7px;
+      cursor: pointer;
+      transition: all .15s;
+    }
+
+    .film-card:hover {
+      border-color: var(--border-hover);
+    }
+
+    .film-card.active {
+      border-color: var(--accent);
+      background: var(--accent-dim);
+    }
+
+    .film-swatch {
+      height: 22px;
+      border-radius: 4px;
+      margin-bottom: 5px;
+    }
+
+    .film-name {
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--text-primary);
+      line-height: 1.2;
+    }
+
+    .film-desc {
+      font-size: 9px;
+      color: var(--text-secondary);
+      margin-top: 1px;
+    }
+
+    /* ── Select ── */
+    .sel-wrap {
+      position: relative;
+    }
+
+    select {
+      width: 100%;
+      background: var(--bg-elevated);
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      padding: 7px 28px 7px 9px;
+      font-size: 12px;
+      font-family: var(--font);
+      cursor: pointer;
+      appearance: none;
+      -webkit-appearance: none;
+      outline: none;
+      transition: border-color .15s;
+    }
+
+    select:focus,
+    select:hover {
+      border-color: var(--border-hover);
+    }
+
+    .sel-wrap::after {
+      content: '▾';
+      position: absolute;
+      right: 9px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-secondary);
+      pointer-events: none;
+      font-size: 10px;
+    }
+
+    /* ── Generate button ── */
+    .gen-btn {
+      width: 100%;
+      background: var(--accent);
+      color: #000;
+      border: none;
+      border-radius: 10px;
+      padding: 13px;
+      font-size: 14px;
+      font-weight: 700;
+      font-family: var(--font);
+      cursor: pointer;
+      transition: all .15s;
+      letter-spacing: -.3px;
+    }
+
+    .gen-btn:hover {
+      background: #ffff52;
+      transform: translateY(-1px);
+    }
+
+    .gen-btn:active {
+      transform: translateY(0);
+    }
+
+    .shortcut-hint {
+      display: block;
+      text-align: center;
+      font-size: 9px;
+      color: var(--text-muted);
+      margin-top: 4px;
+      letter-spacing: .3px;
+    }
+
+    /* ── Variation pills ── */
+    .var-pills {
+      display: flex;
+      gap: 4px;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .var-pills .var-label {
+      font-size: 10px;
+      color: var(--text-secondary);
+      margin-right: 4px;
+    }
+    .var-pill {
+      width: 28px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--bg-elevated);
+      color: var(--text-secondary);
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all .15s;
+    }
+    .var-pill.active {
+      border-color: var(--accent-border);
+      background: var(--accent-dim);
+      color: var(--accent);
+    }
+
+    /* ── Variation grid overlay ── */
+    .var-grid-overlay {
+      display: none;
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,.85);
+      z-index: 10;
+      padding: 12px;
+      gap: 8px;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .var-grid-overlay.active {
+      display: grid;
+    }
+    .var-grid-overlay.cols-2 { grid-template-columns: 1fr 1fr; }
+    .var-grid-overlay.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+    .var-grid-overlay.cols-4 { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; }
+    .var-grid-item {
+      position: relative;
+      border-radius: 8px;
+      overflow: hidden;
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition: border-color .15s;
+    }
+    .var-grid-item:hover { border-color: var(--accent); }
+    .var-grid-item img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .var-grid-item .var-pick-label {
+      position: absolute;
+      bottom: 6px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0,0,0,.7);
+      color: var(--text-primary);
+      font-size: 10px;
+      padding: 2px 10px;
+      border-radius: 4px;
+      opacity: 0;
+      transition: opacity .15s;
+    }
+    .var-grid-item:hover .var-pick-label { opacity: 1; }
+
+    .gen-btn:disabled {
+      opacity: .45;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* ── Model display badge ── */
+    .model-badge {
+      background: var(--bg-elevated);
+      border: 1px solid var(--accent-border);
+      border-radius: 8px;
+      padding: 9px 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .model-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 8px var(--accent);
+      flex-shrink: 0;
+    }
+
+    .model-name {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    .model-via {
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-top: 1px;
+    }
+
+    /* ── Grounding toggle ── */
+    .grounding-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 9px;
+    }
+
+    .grounding-label {
+      font-size: 11px;
+      color: var(--text-secondary);
+    }
+
+    .grounding-label span {
+      font-size: 9px;
+      color: var(--text-muted);
+      display: block;
+      margin-top: 1px;
+    }
+
+    .toggle {
+      position: relative;
+      width: 32px;
+      height: 18px;
+      flex-shrink: 0;
+    }
+
+    .toggle input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .toggle-track {
+      position: absolute;
+      inset: 0;
+      background: var(--bg-base);
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      cursor: pointer;
+      transition: background .2s, border-color .2s;
+    }
+
+    .toggle input:checked+.toggle-track {
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+
+    .toggle-thumb {
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 12px;
+      height: 12px;
+      background: var(--text-muted);
+      border-radius: 50%;
+      transition: transform .2s, background .2s;
+      pointer-events: none;
+    }
+
+    .toggle input:checked~.toggle-thumb {
+      transform: translateX(14px);
+      background: #000;
+    }
+
+    /* ── Meta tags ── */
+    .meta-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 9px;
+    }
+
+    .meta-tag {
+      font-size: 10px;
+      color: var(--text-secondary);
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 2px 7px;
+    }
+
+    .meta-tag b {
+      color: var(--text-primary);
+      font-weight: 500;
+    }
+
+    /* ── Bottom prompt bar ── */
+    .prompt-bar {
+      background: var(--bg-card);
+      border-top: 1px solid var(--border);
+      padding: 10px 16px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      align-items: start;
+      overflow: hidden;
+    }
+
+    .gen-prompt-label {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: .6px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+    .gen-prompt-text {
+      font-size: 11px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+      overflow: hidden;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+    }
+
+    .gen-prompt-text em {
+      color: var(--accent);
+      font-style: normal;
+      font-weight: 500;
+    }
+
+    .prompt-actions {
+      display: flex;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+
+    .icon-btn {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 6px 10px;
+      cursor: pointer;
+      color: var(--text-secondary);
+      font-size: 11px;
+      font-family: var(--font);
+      transition: all .15s;
+      white-space: nowrap;
+    }
+
+    .icon-btn:hover {
+      border-color: var(--border-hover);
+      color: var(--text-primary);
+    }
+
+    .copy-ok {
+      color: var(--green) !important;
+      border-color: rgba(61, 255, 133, .3) !important;
+    }
+
+    /* ── Modal ── */
+    .modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, .82);
+      z-index: 200;
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal.open {
+      display: flex;
+    }
+
+    .modal-box {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 20px;
+      width: min(600px, 92vw);
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+
+    .modal-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+
+    .modal-title {
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      cursor: pointer;
+      font-size: 20px;
+    }
+
+    .modal-text {
+      font-size: 12px;
+      line-height: 1.9;
+      color: var(--text-secondary);
+      white-space: pre-wrap;
+    }
+
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .label-sm {
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+    /* ── History view ── */
+    .history-view {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px 24px;
+      display: none;
+      flex-direction: column;
+    }
+    .history-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      flex-shrink: 0;
+    }
+    .history-title {
+      font-size: 14px;
+      font-weight: 600;
+    }
+    .folder-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11px;
+      color: var(--text-secondary);
+    }
+    .history-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 12px;
+    }
+    .history-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+      transition: border-color .15s;
+    }
+    .history-card:hover { border-color: var(--border-hover); }
+    .history-thumb-wrap {
+      width: 100%;
+      height: 130px;
+      background: #070709;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+    .history-thumb {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      display: block;
+    }
+    .history-info { padding: 8px 10px 10px; }
+    .history-prompt {
+      font-size: 10px;
+      color: var(--text-secondary);
+      overflow: hidden;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      line-clamp: 2;
+      -webkit-box-orient: vertical;
+      line-height: 1.45;
+      margin-bottom: 5px;
+    }
+    .history-meta {
+      font-size: 9px;
+      color: var(--text-muted);
+      margin-bottom: 7px;
+    }
+    .history-dl-btn {
+      width: 100%;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 5px;
+      cursor: pointer;
+      color: var(--text-secondary);
+      font-size: 10px;
+      font-family: var(--font);
+      text-align: center;
+      transition: all .15s;
+    }
+    .history-dl-btn:hover { border-color: var(--border-hover); color: var(--text-primary); }
+    .history-empty {
+      grid-column: 1/-1;
+      text-align: center;
+      color: var(--text-muted);
+      padding: 80px 20px;
+      font-size: 13px;
+    }
+    .version-badge {
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-left: auto;
+      margin-right: 6px;
+    }
+
+    /* ── History detail panel ── */
+    .history-detail-panel {
+      position: fixed;
+      right: 0;
+      top: 0;
+      width: 380px;
+      height: 100vh;
+      background: var(--bg-card);
+      border-left: 1px solid var(--border);
+      padding: 16px;
+      overflow-y: auto;
+      transform: translateX(100%);
+      transition: transform .2s;
+      z-index: 100;
+    }
+    .history-detail-panel.open { transform: translateX(0); }
+    .detail-close {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      background: none;
+      border: none;
+      font-size: 20px;
+      cursor: pointer;
+      color: var(--text-muted);
+      padding: 0;
+    }
+    .detail-close:hover { color: var(--text-primary); }
+    .detail-image {
+      width: 100%;
+      max-height: 200px;
+      object-fit: contain;
+      border-radius: 8px;
+      margin-bottom: 12px;
+      background: #070709;
+      padding: 8px;
+      border: 1px solid var(--border);
+    }
+    .detail-label {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: .6px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+      margin-top: 14px;
+    }
+    .detail-label:first-of-type { margin-top: 40px; }
+    .detail-prompt {
+      font-size: 12px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+      word-break: break-word;
+      padding: 10px;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      margin-bottom: 10px;
+    }
+    .detail-meta {
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+    }
+    .detail-actions {
+      display: flex;
+      gap: 6px;
+      margin-top: 10px;
+    }
+    .detail-actions button {
+      flex: 1;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 8px;
+      cursor: pointer;
+      color: var(--text-secondary);
+      font-size: 11px;
+      font-family: var(--font);
+      transition: all .15s;
+    }
+    .detail-actions button:hover {
+      border-color: var(--border-hover);
+      color: var(--text-primary);
+    }
+
+    /* ── Palette hex swatches ── */
+    .palette-dot {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      display: inline-block;
+      cursor: default;
+      transition: transform .1s;
+    }
+    .palette-dot:hover {
+      transform: scale(1.3);
+    }
+
+    /* ══ Camera Control view ══ */
+    .cc-view { display:none; flex-direction:column; height:100%; overflow:hidden; }
+    .cc-equipment-bar {
+      display:grid; grid-template-columns:repeat(4,1fr); gap:6px;
+      padding:12px 16px; border-bottom:1px solid var(--border); background:var(--bg-card); flex-shrink:0;
+    }
+    .cc-slot {
+      background:var(--bg-elevated); border:1px solid var(--border); border-radius:10px;
+      padding:12px; cursor:pointer; text-align:center; transition:all .15s; position:relative;
+    }
+    .cc-slot:hover { border-color:var(--border-hover); }
+    .cc-slot.active { border-color:var(--accent); background:var(--accent-dim); }
+    .cc-slot-label {
+      font-size:9px; font-weight:700; letter-spacing:1px; text-transform:uppercase;
+      color:var(--text-muted); margin-bottom:8px;
+    }
+    .cc-slot-value { font-size:13px; font-weight:600; color:var(--text-primary); line-height:1.3; }
+    .cc-slot-badge {
+      font-size:8px; font-weight:600; letter-spacing:.5px; text-transform:uppercase;
+      color:var(--text-muted); margin-top:4px;
+    }
+    .cc-slot-big { font-size:28px; font-weight:700; color:var(--accent); letter-spacing:-1px; }
+    .cc-slot-unit { font-size:12px; color:var(--text-secondary); font-weight:500; }
+    .cc-picker-wrap { position:relative; flex-shrink:0; }
+    .cc-picker {
+      display:none; padding:16px; border-bottom:1px solid var(--border);
+      background:var(--bg-card); overflow-y:auto; max-height:320px;
+    }
+    .cc-picker.open { display:block; }
+    .cc-picker-title {
+      font-size:10px; font-weight:600; letter-spacing:.6px; text-transform:uppercase;
+      color:var(--text-muted); margin-bottom:8px;
+    }
+    .cc-lens-tabs {
+      display:flex; gap:3px; margin-bottom:10px; background:var(--bg-elevated);
+      border-radius:8px; padding:3px;
+    }
+    .cc-lens-tab {
+      flex:1; padding:5px 8px; border-radius:6px; border:none; background:none;
+      color:var(--text-secondary); font-size:10px; font-weight:600;
+      font-family:var(--font); cursor:pointer; text-align:center; transition:all .15s;
+    }
+    .cc-lens-tab.active { background:var(--accent-dim); color:var(--accent); }
+    .cc-lens-tab:hover:not(.active) { color:var(--text-primary); }
+    .cc-content {
+      display:grid; grid-template-columns:1fr 340px; flex:1; overflow:hidden;
+    }
+    .cc-preview-area {
+      flex:1; display:flex; align-items:center; justify-content:center;
+      background:#070709; overflow:hidden; position:relative; min-height:200px;
+    }
+    .cc-sidebar {
+      border-left:1px solid var(--border); display:flex; flex-direction:column;
+      overflow-y:auto; background:var(--bg-card); padding:12px;
+    }
+    .cc-iris {
+      width:36px; height:36px; border-radius:50%; border:3px solid var(--text-secondary);
+      display:inline-block; margin:4px auto; position:relative;
+    }
+    .cc-iris-inner {
+      position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+      border-radius:50%; background:var(--bg-base); transition:all .15s;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app">
+
+    <!-- ═══════════════════════ HEADER ═══════════════════════ -->
+    <header class="header">
+      <div class="logo">
+        <div class="logo-icon">🍌</div>
+        <div class="logo-text">nano <span>banana</span> pro</div>
+      </div>
+      <div class="header-tabs">
+        <button class="tab active" onclick="switchTab('studio',this)">Prompt Agent</button>
+        <button class="tab" onclick="switchTab('camera',this)">Camera Control</button>
+        <button class="tab" onclick="switchTab('history',this)">History</button>
+      </div>
+      <div class="header-right">
+        <!-- API Keys inline -->
+        <div class="apikey-wrap">
+          <span style="font-size:10px;color:var(--text-muted);white-space:nowrap;">AI Studio</span>
+          <input class="apikey-input" type="password" id="apikeyInput" placeholder="AIza…  Google AI Studio key"
+            oninput="saveApiKey(this.value)" autocomplete="off" spellcheck="false" style="width:160px;">
+          <button class="apikey-toggle" onclick="toggleApiKeyVis()" title="Show/hide key">👁</button>
+        </div>
+        <span id="keyStatus" style="font-size:11px;color:var(--text-secondary);">
+          <span class="status-dot dot-red" id="keyDot"></span> No key
+        </span>
+        <span class="version-badge" id="versionBadge"></span>
+        <span class="badge">✦ NANO BANANA PRO</span>
+      </div>
+    </header>
+
+    <!-- ═══════════════════════ MAIN ════════════════════════ -->
+    <div class="main" id="studioView">
+
+      <!-- ─────── LEFT: CINEFRAME-OMEGA Settings ─────── -->
+      <div class="panel">
+
+        <!-- Apply Camera Settings + Scene Extractor -->
+        <div class="section">
+          <div style="display:flex;align-items:center;gap:8px;padding:6px 8px;background:var(--bg-elevated);border-radius:6px;font-size:11px;color:var(--text-secondary);margin-bottom:8px;">
+            <span>Apply Camera Settings</span>
+            <label class="toggle" style="margin-left:auto;">
+              <input type="checkbox" id="useCameraSettingsToggle" checked onchange="S.useCameraSettings=this.checked">
+              <div class="toggle-track"></div>
+              <div class="toggle-thumb"></div>
+            </label>
+          </div>
+          <button id="extractSceneBtn" onclick="extractScene()" style="
+            width:100%;padding:8px;border-radius:6px;border:1px solid var(--accent-border);
+            background:var(--accent-dim);color:var(--accent);font-size:11px;font-weight:600;
+            font-family:var(--font);cursor:pointer;transition:all .15s;">
+            ✦ Extract Scene from Reference
+          </button>
+        </div>
+
+        <!-- Aspect Ratio -->
+        <div class="section">
+          <div class="sec-label">Aspect Ratio</div>
+          <div class="aspect-grid" id="aspectGrid"></div>
+        </div>
+
+        <!-- ── CINEMATOGRAPHY ── -->
+        <div class="section">
+          <div class="sec-label" style="color:var(--accent);font-size:9px;letter-spacing:1.2px;margin-bottom:10px;">CINEMATOGRAPHY</div>
+
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+            <div class="sec-label" style="margin:0;">Format</div>
+            <label class="toggle" style="margin:0;"><input type="checkbox" id="togFormat" onchange="S.enableFormat=this.checked"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+          </div>
+          <div class="pill-group" id="formatGroup" style="margin-bottom:12px;"></div>
+
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+            <div class="sec-label" style="margin:0;">Frame Size</div>
+            <label class="toggle" style="margin:0;"><input type="checkbox" id="togFrameSize" onchange="S.enableFrameSize=this.checked"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+          </div>
+          <div class="pill-group" id="frameSizeGroup" style="margin-bottom:12px;"></div>
+
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+            <div class="sec-label" style="margin:0;">Shot Type</div>
+            <label class="toggle" style="margin:0;"><input type="checkbox" id="togShotType" onchange="S.enableShotType=this.checked"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+          </div>
+          <div class="pill-group" id="shotTypeGroup" style="margin-bottom:12px;"></div>
+
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+            <div class="sec-label" style="margin:0;">Lens Size</div>
+            <label class="toggle" style="margin:0;"><input type="checkbox" id="togLensSize" onchange="S.enableLensSize=this.checked"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+          </div>
+          <div class="pill-group" id="lensSizeGroup" style="margin-bottom:12px;"></div>
+
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+            <div class="sec-label" style="margin:0;">Composition</div>
+            <label class="toggle" style="margin:0;"><input type="checkbox" id="togComposition" onchange="S.enableComposition=this.checked"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+          </div>
+          <div class="pill-group" id="compositionGroup"></div>
+        </div>
+
+        <!-- ── LIGHTING ── -->
+        <div class="section">
+          <div class="sec-label" style="color:var(--accent);font-size:9px;letter-spacing:1.2px;margin-bottom:10px;">LIGHTING</div>
+
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+            <div class="sec-label" style="margin:0;">Lighting</div>
+            <label class="toggle" style="margin:0;"><input type="checkbox" id="togLightingDesc" onchange="S.enableLightingDesc=this.checked"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+          </div>
+          <div class="pill-group" id="lightingDescGroup" style="margin-bottom:12px;"></div>
+
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+            <div class="sec-label" style="margin:0;">Lighting Type</div>
+            <label class="toggle" style="margin:0;"><input type="checkbox" id="togLightingType" onchange="S.enableLightingType=this.checked"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+          </div>
+          <div class="pill-group" id="lightingTypeGroup"></div>
+        </div>
+
+        <!-- ── ENVIRONMENT ── -->
+        <div class="section">
+          <div class="sec-label" style="color:var(--accent);font-size:9px;letter-spacing:1.2px;margin-bottom:10px;">ENVIRONMENT</div>
+
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+            <div class="sec-label" style="margin:0;">Time of Day</div>
+            <label class="toggle" style="margin:0;"><input type="checkbox" id="togTimeOfDay" onchange="S.enableTimeOfDay=this.checked"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+          </div>
+          <div class="pill-group" id="timeOfDayGroup" style="margin-bottom:12px;"></div>
+
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+            <div class="sec-label" style="margin:0;">Interior / Exterior</div>
+            <label class="toggle" style="margin:0;"><input type="checkbox" id="togIntExt" onchange="S.enableIntExt=this.checked"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+          </div>
+          <div class="pill-group" id="intExtGroup" style="margin-bottom:12px;"></div>
+
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+            <div class="sec-label" style="margin:0;">Location Type</div>
+            <label class="toggle" style="margin:0;"><input type="checkbox" id="togLocationType" onchange="S.enableLocationType=this.checked"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+          </div>
+          <div class="pill-group" id="locationTypeGroup" style="margin-bottom:12px;"></div>
+
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+            <div class="sec-label" style="margin:0;">Set / Location Detail</div>
+            <label class="toggle" style="margin:0;"><input type="checkbox" id="togSet" onchange="S.enableSet=this.checked"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+          </div>
+          <input type="text" class="prompt-textarea" id="setInput" placeholder="e.g. Subway Station > Platform"
+            oninput="S.set=this.value; rebuildPrompt()"
+            style="height:auto;padding:6px 10px;font-size:11px;margin-bottom:12px;">
+
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+            <div class="sec-label" style="margin:0;">Time Period</div>
+            <label class="toggle" style="margin:0;"><input type="checkbox" id="togTimePeriod" onchange="S.enableTimePeriod=this.checked"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+          </div>
+          <div class="pill-group" id="timePeriodGroup"></div>
+        </div>
+
+        <!-- ── EQUIPMENT ── -->
+        <div class="section">
+          <div class="sec-label" style="color:var(--accent);font-size:9px;letter-spacing:1.2px;margin-bottom:10px;">EQUIPMENT</div>
+
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+            <div class="sec-label" style="margin:0;">Film Stock</div>
+            <label class="toggle" style="margin:0;"><input type="checkbox" id="togFilmStock" onchange="S.enableFilmStock=this.checked"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+          </div>
+          <div class="pill-group" id="filmStockGroup" style="margin-bottom:12px;"></div>
+
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+            <div class="sec-label" style="margin:0;">Camera</div>
+            <label class="toggle" style="margin:0;"><input type="checkbox" id="togCamera" onchange="S.enableCamera=this.checked"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+          </div>
+          <div class="pill-group" id="cameraGroup" style="margin-bottom:12px;"></div>
+
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+            <div class="sec-label" style="margin:0;">Lens</div>
+            <label class="toggle" style="margin:0;"><input type="checkbox" id="togLens" onchange="S.enableLens=this.checked"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+          </div>
+          <div class="pill-group" id="lensGroup"></div>
+        </div>
+
+        <!-- ── VISUALS ── -->
+        <div class="section">
+          <div class="sec-label" style="color:var(--accent);font-size:9px;letter-spacing:1.2px;margin-bottom:10px;">VISUALS</div>
+
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+            <div class="sec-label" style="margin:0;">Color</div>
+            <label class="toggle" style="margin:0;"><input type="checkbox" id="togColors" onchange="S.enableColors=this.checked"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+          </div>
+          <div class="pill-group" id="colorsGroup" style="margin-bottom:12px;"></div>
+
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+            <div class="sec-label" style="margin:0;">Palette</div>
+            <label class="toggle" style="margin:0;"><input type="checkbox" id="togPaletteHex" onchange="S.enablePaletteHex=this.checked"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+          </div>
+          <div id="paletteHexGroup" class="pill-group" style="gap:3px;">
+            <span style="font-size:10px;color:var(--text-muted);">Auto-filled by Scene Extractor</span>
+          </div>
+        </div>
+
+      </div><!-- /left -->
+
+      <!-- ─────── CENTER: Preview + Prompt ─────── -->
+      <div class="center-panel">
+
+        <div class="preview-area" id="previewArea">
+          <div class="preview-canvas" id="previewCanvas">
+            <div class="preview-placeholder" id="placeholder">
+              <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+                <rect x="3" y="3" width="18" height="18" rx="2.5" />
+                <circle cx="8.5" cy="8.5" r="1.5" />
+                <path d="M21 15l-5-5L5 21" />
+              </svg>
+              <div>
+                <div style="font-size:12px;color:var(--text-secondary);">Set parameters &amp; enter a prompt</div>
+                <div style="font-size:10px;color:var(--text-muted);margin-top:4px;">Nano Banana Pro · Google AI Studio ·
+                  Gemini</div>
+              </div>
+            </div>
+            <img id="genImg" style="display:none;" alt="Generated image">
+            <div class="img-overlay">
+              <button class="overlay-btn" onclick="downloadImg()">⬇ Save</button>
+              <button class="overlay-btn" onclick="copyImgUrl()">🔗 URL</button>
+              <button class="overlay-btn" onclick="openFullscreen()">⛶ Full</button>
+            </div>
+            <div class="var-grid-overlay" id="varGridOverlay"></div>
+          </div>
+          <div class="preview-loading" id="loadingOverlay" style="display:none;">
+            <div class="spinner"></div>
+            <div class="loading-status" id="loadingStatus">Submitting task…</div>
+            <div style="font-size:10px;color:var(--text-muted);margin-top:-4px;">Nano Banana Pro · Google AI Studio
+            </div>
+          </div>
+        </div>
+
+        <!-- Resolution -->
+        <div class="section" style="border-top:1px solid var(--border);">
+          <div class="sec-label">Resolution</div>
+          <div class="res-tier-group" id="resTierGroup"></div>
+          <div class="sec-label" style="margin-top:10px;">Output Format</div>
+          <div class="fmt-group" id="fmtGroup"></div>
+        </div>
+
+        <!-- Reference Images -->
+        <div class="section" style="border-top:1px solid var(--border);">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+            <div class="sec-label" style="margin:0;">Reference Images</div>
+            <span style="font-size:10px;color:var(--text-muted);" id="refCount">0 / 14</span>
+          </div>
+          <div class="ref-upload-zone" id="refUploadZone" onclick="document.getElementById('refFileInput').click()">
+            Drop images here or click to browse
+          </div>
+          <input type="file" id="refFileInput" accept="image/*" multiple style="display:none;" onchange="handleRefFiles(this.files)">
+          <div class="ref-thumbs" id="refThumbs"></div>
+        </div>
+
+        <!-- Prompt -->
+        <div class="prompt-block">
+          <div class="prompt-label">Scene Description</div>
+          <div style="display:flex;gap:6px;align-items:flex-start;">
+            <textarea class="prompt-textarea" id="mainPrompt" rows="3"
+              placeholder="Describe your scene… e.g. a woman walking through a rain-soaked Tokyo alley at night, neon reflections on wet cobblestones…"
+              oninput="rebuildPrompt()"
+              style="flex:1;">a red ferrari in a grass field</textarea>
+            <button id="enhanceBtn" onclick="enhancePrompt()" style="
+            flex-shrink:0; width:70px; height:70px; padding:4px; border-radius:6px; border:1px solid var(--accent-border);
+            background:var(--accent-dim); color:var(--accent); font-size:10px; font-weight:600;
+            font-family:var(--font); cursor:pointer; letter-spacing:.3px; transition:all .15s;
+            display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; line-height:1.2;">
+              <span style="font-size:12px;">✦</span>
+              <span>Enhance</span>
+              <span style="opacity:.5;font-size:7px;margin-top:2px;">Ctrl+E</span>
+            </button>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px;margin-bottom:6px;">
+            <div class="prompt-label" style="margin:0;">Final Prompt <span style="text-transform:none;font-weight:400;font-size:9px;">(sent to model)</span></div>
+            <button onclick="copyFinalPrompt()" style="background:none;border:none;color:var(--text-muted);font-size:10px;cursor:pointer;font-family:var(--font);padding:0;" id="copyFinalBtn">📋 Copy</button>
+          </div>
+          <textarea class="prompt-textarea" id="finalPrompt" rows="4"
+            placeholder="Click ✦ Enhance Prompt to generate the final prompt from your scene + camera settings…"
+            style="font-size:11px;color:var(--text-secondary);resize:vertical;"></textarea>
+          <div id="errorMsg" style="display:none;" class="error-msg"></div>
+        </div>
+
+      </div><!-- /center -->
+
+      <!-- ─────── RIGHT: Model + Generate ─────── -->
+      <div class="panel" style="display:flex;flex-direction:column;overflow:hidden;">
+
+        <div style="flex:1;overflow-y:auto;">
+          <div class="section" style="border-bottom:none;">
+            <div class="sec-label">Model</div>
+            <div class="model-badge">
+              <div class="model-dot"></div>
+              <div>
+                <div class="model-name">Nano Banana Pro</div>
+                <div class="model-via">gemini-3-pro-image-preview · Google AI Studio</div>
+              </div>
+            </div>
+            <div class="grounding-row">
+              <div class="grounding-label">
+                Search Grounding
+                <span>Real-time Google Search context</span>
+              </div>
+              <label class="toggle">
+                <input type="checkbox" id="groundingToggle" onchange="S.grounding=this.checked">
+                <div class="toggle-track"></div>
+                <div class="toggle-thumb"></div>
+              </label>
+            </div>
+            <div class="grounding-row">
+              <div class="grounding-label">
+                Thinking Mode
+                <span>Extended reasoning for complex prompts</span>
+              </div>
+              <label class="toggle">
+                <input type="checkbox" id="thinkingToggle" onchange="S.thinking=this.checked">
+                <div class="toggle-track"></div>
+                <div class="toggle-thumb"></div>
+              </label>
+            </div>
+            <div id="genMeta" style="display:none;">
+              <div class="meta-row">
+                <div class="meta-tag">AR: <b id="mAR">—</b></div>
+                <div class="meta-tag">Res: <b id="mRes">—</b></div>
+                <div class="meta-tag">Fmt: <b id="mFmt">—</b></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sticky Generate button -->
+        <div style="padding:12px;border-top:1px solid var(--border);background:var(--bg-card);flex-shrink:0;">
+          <div class="var-pills" id="varPills">
+            <span class="var-label">Variations:</span>
+            <div class="var-pill active" onclick="pickVariation(1)">1</div>
+            <div class="var-pill" onclick="pickVariation(2)">2</div>
+            <div class="var-pill" onclick="pickVariation(3)">3</div>
+            <div class="var-pill" onclick="pickVariation(4)">4</div>
+          </div>
+          <button class="gen-btn" id="genBtn" onclick="generateImage()">✦ Generate Image · <span id="genPrice">$0.134</span></button>
+          <span class="shortcut-hint">Ctrl+Enter</span>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-top:7px;font-size:10px;color:var(--text-muted);">
+            <span>Nano Banana Pro · Google AI Studio</span>
+            <span id="totalSpent" style="color:var(--accent);font-weight:600;">$0.00</span>
+          </div>
+        </div>
+
+      </div><!-- /right -->
+    </div><!-- /main -->
+
+    <!-- ═══════════════════════ CAMERA CONTROL ═══════════════════════ -->
+    <div class="cc-view" id="cameraView">
+
+      <!-- Equipment Bar -->
+      <div class="cc-equipment-bar">
+        <div class="cc-slot" id="ccSlotCamera" onclick="ccTogglePicker('camera')">
+          <div class="cc-slot-label">Camera</div>
+          <div class="cc-slot-value" id="ccSlotCameraName">Studio Digital S35</div>
+          <div class="cc-slot-badge" id="ccSlotCameraType">DIGITAL</div>
+        </div>
+        <div class="cc-slot" id="ccSlotLens" onclick="ccTogglePicker('lens')">
+          <div class="cc-slot-label">Lens</div>
+          <div class="cc-slot-value" id="ccSlotLensName">Premium Modern Prime</div>
+          <div class="cc-slot-badge" id="ccSlotLensType">SPHERICAL</div>
+        </div>
+        <div class="cc-slot" id="ccSlotFocal" onclick="ccTogglePicker('focal')">
+          <div class="cc-slot-label">Focal Length</div>
+          <div><span class="cc-slot-big" id="ccSlotFocalVal">35</span><span class="cc-slot-unit"> mm</span></div>
+        </div>
+        <div class="cc-slot" id="ccSlotAperture" onclick="ccTogglePicker('aperture')">
+          <div class="cc-slot-label">Aperture</div>
+          <div class="cc-iris" id="ccIris"><div class="cc-iris-inner" id="ccIrisInner" style="width:24px;height:24px;"></div></div>
+          <div class="cc-slot-value" id="ccSlotApertureVal">f/1.4</div>
+        </div>
+      </div>
+
+      <!-- Picker Panels -->
+      <div class="cc-picker-wrap">
+        <div class="cc-picker" id="ccPickerCamera">
+          <div class="cc-picker-title">Select Camera Body</div>
+          <div class="camera-grid" id="ccCameraGrid"></div>
+        </div>
+        <div class="cc-picker" id="ccPickerLens">
+          <div class="cc-picker-title">Select Lens</div>
+          <div class="cc-lens-tabs">
+            <button class="cc-lens-tab active" data-type="ALL" onclick="ccFilterLensType('ALL')">All</button>
+            <button class="cc-lens-tab" data-type="SPHERICAL" onclick="ccFilterLensType('SPHERICAL')">Spherical</button>
+            <button class="cc-lens-tab" data-type="ANAMORPHIC" onclick="ccFilterLensType('ANAMORPHIC')">Anamorphic</button>
+            <button class="cc-lens-tab" data-type="FILTER" onclick="ccFilterLensType('FILTER')">Filter</button>
+          </div>
+          <div class="lens-grid" id="ccLensGrid"></div>
+        </div>
+        <div class="cc-picker" id="ccPickerFocal">
+          <div class="cc-picker-title">Focal Length</div>
+          <div style="text-align:center;margin-bottom:6px;">
+            <span class="cc-slot-big" id="ccFocalDisplay">35</span><span class="cc-slot-unit"> mm</span>
+            <div style="font-size:10px;color:var(--text-muted);margin-top:2px;" id="ccFocalDesc">Standard — natural perspective</div>
+          </div>
+          <div class="slider-row">
+            <span class="sl-label">8mm</span>
+            <input type="range" id="ccFocalSlider" min="0" max="13" value="10" oninput="ccSetFocalLength(this.value)" style="flex:1;">
+            <span class="sl-label">50mm</span>
+          </div>
+        </div>
+        <div class="cc-picker" id="ccPickerAperture">
+          <div class="cc-picker-title">Aperture</div>
+          <div style="text-align:center;margin-bottom:6px;">
+            <span class="cc-slot-big" id="ccApertureDisplay">f/1.4</span>
+            <div style="font-size:10px;color:var(--text-muted);margin-top:2px;" id="ccApertureDesc">Wide open — extremely shallow depth of field</div>
+          </div>
+          <div class="slider-row">
+            <span class="sl-label">f/1.4</span>
+            <input type="range" id="ccApertureSlider" min="0" max="7" value="0" oninput="ccSetAperture(this.value)" style="flex:1;">
+            <span class="sl-label">f/16</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Content: Preview + Sidebar -->
+      <div class="cc-content">
+        <div class="cc-preview-area" id="ccPreviewArea">
+          <div class="preview-canvas" id="ccPreviewCanvas">
+            <div class="preview-placeholder" id="ccPlaceholder">
+              <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+                <rect x="3" y="3" width="18" height="18" rx="2.5"/><circle cx="8.5" cy="8.5" r="1.5"/>
+                <path d="M21 15l-5-5L5 21"/>
+              </svg>
+              <div>
+                <div style="font-size:11px;color:var(--text-secondary);">Select camera + lens, describe your scene</div>
+                <div style="font-size:9px;color:var(--text-muted);margin-top:3px;">Camera Control</div>
+              </div>
+            </div>
+            <img id="ccGenImg" style="display:none;max-width:100%;max-height:100%;object-fit:contain;" alt="Generated">
+            <div class="var-grid-overlay" id="ccVarGridOverlay"></div>
+            <div class="img-overlay">
+              <button class="overlay-btn" onclick="ccDownloadImg()">&#x2B07; Save</button>
+              <button class="overlay-btn" onclick="ccFullscreen()">&#x26F6; Full</button>
+            </div>
+          </div>
+          <div class="preview-loading" id="ccLoadingOverlay" style="display:none;">
+            <div class="spinner"></div>
+            <div class="loading-status" id="ccLoadingStatus">Generating...</div>
+          </div>
+        </div>
+
+        <div class="cc-sidebar">
+          <div class="sec-label">Aspect Ratio</div>
+          <div class="aspect-grid" id="ccAspectGrid"></div>
+
+          <div class="sec-label" style="margin-top:10px;">Resolution</div>
+          <div class="res-tier-group" id="ccResTierGroup"></div>
+
+          <div style="margin-top:10px;">
+            <button class="gen-btn" id="ccShotDeckBtn" onclick="ccShotDeck()" style="background:var(--bg-elevated);color:var(--text-secondary);font-size:10px;padding:6px 10px;">
+              &#x1F3AC; ShotDeck &middot; Extract Scene
+            </button>
+            <input type="file" id="ccShotDeckFile" accept="image/*" style="display:none;" onchange="ccShotDeckFilePicked(event)">
+          </div>
+
+          <div class="prompt-label" style="margin-top:12px;">Scene Description</div>
+          <textarea class="prompt-textarea" id="ccPromptInput" rows="4"
+            placeholder="Describe your scene... the camera setup will shape the look."
+            oninput="S.ccPrompt=this.value"></textarea>
+          <div id="ccErrorMsg" style="display:none;" class="error-msg"></div>
+
+          <div style="margin-top:auto;padding-top:12px;">
+            <div class="var-pills" id="ccVarPills"></div>
+            <button class="gen-btn" id="ccGenBtn" onclick="ccGenerateImage()">
+              &#x2726; Generate &middot; <span id="ccGenPrice">$0.134</span>
+            </button>
+            <span class="shortcut-hint">Ctrl+Enter</span>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-top:7px;font-size:10px;color:var(--text-muted);">
+              <span>Camera Control</span>
+              <span>Total: <span id="ccTotalSpent" style="color:var(--accent);font-weight:600;">$0.00</span></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /cameraView -->
+
+    <!-- ═══════════════════════ HISTORY ══════════════════════ -->
+    <div class="history-view" id="historyView">
+      <div class="history-header">
+        <div class="history-title">Generation History</div>
+        <div class="folder-bar">
+          <span class="status-dot" id="folderDot" style="background:var(--text-muted);box-shadow:none;"></span>
+          <span id="folderLabel">No output folder — </span>
+          <button class="icon-btn" onclick="selectOutputFolder()">📁 Select Folder</button>
+        </div>
+      </div>
+      <div class="history-grid" id="historyGrid">
+        <div class="history-empty">No generations yet. Generate an image to get started.</div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════ HISTORY DETAIL PANEL ═══════════════════════ -->
+    <div class="history-detail-panel" id="detailPanel">
+      <button class="detail-close" onclick="closeDetailPanel()">✕</button>
+      <img class="detail-image" id="detailImage" src="" alt="Generation">
+
+      <div class="detail-label">Generation Prompt</div>
+      <div class="detail-prompt" id="detailPromptText"></div>
+
+      <div class="detail-label" id="detailRefLabel" style="display:none;">Reference Image</div>
+      <img id="detailRefImage" src="" alt="Reference" style="display:none;width:100%;max-width:200px;border-radius:8px;cursor:pointer;border:1px solid var(--border);margin-bottom:12px;" onclick="openRefFromDetail()">
+
+      <div class="detail-label">Details</div>
+      <div class="detail-meta" id="detailMetaText"></div>
+
+      <div class="detail-actions">
+        <button onclick="copyDetailPrompt()">📋 Copy Prompt</button>
+        <button onclick="downloadDetailImage()">⬇ Download</button>
+        <button onclick="useAsReference()">🖼 Use as Ref</button>
+        <button onclick="editImage()">✎ Edit</button>
+        <button id="upscaleBtn" onclick="toggleUpscalePicker()">⬆ Upscale</button>
+      </div>
+      <div id="upscalePicker" style="display:none;margin-top:8px;">
+        <div style="font-size:10px;font-weight:600;letter-spacing:.6px;text-transform:uppercase;color:var(--text-muted);margin-bottom:6px;">Upscale to</div>
+        <div id="upscaleOptions" style="display:flex;gap:6px;"></div>
+      </div>
+    </div>
+
+  </div><!-- /app -->
+
+  <!-- ═══════════════════════ MODAL ═══════════════════════ -->
+  <div class="modal" id="modal" onclick="if(event.target===this)closeModal()">
+    <div class="modal-box">
+      <div class="modal-head">
+        <span class="modal-title">Full Generated Prompt</span>
+        <button class="modal-close" onclick="closeModal()">✕</button>
+      </div>
+      <div class="modal-text" id="modalText"></div>
+      <button class="gen-btn" style="margin-top:16px;" onclick="copyPrompt();closeModal()">📋 Copy &amp; Close</button>
+    </div>
+  </div>
+
+  <!-- Fullscreen image viewer -->
+  <div class="fullscreen-overlay" id="fullscreenOverlay">
+    <button class="fullscreen-close" onclick="closeFullscreen()">✕ Close</button>
+    <img id="fullscreenImg" alt="Fullscreen view">
+    <div class="fullscreen-zoom-hint">Scroll to zoom · Drag to pan · Esc to close</div>
+  </div>
+
+  <script>
+    // ══════════════════════════════════════════
+    //  VERSION
+    // ══════════════════════════════════════════
+    const APP_VERSION = 'beta v0.01';
+
+    // ══════════════════════════════════════════
+    //  DATA
+    // ══════════════════════════════════════════
+
+    // ── CINEFRAME-OMEGA Settings ──
+
+    // cinematography.format
+    const FORMATS = [
+      'Film - 8mm', 'Film - Super 8', 'Film - 16mm', 'Film - Super 16',
+      'Film - 35mm', 'Film - 65mm', 'Film - 70mm IMAX',
+      'Digital - Super35', 'Digital - Full Frame', 'Digital - Large Format',
+      'Digital - Medium Format', 'Digital - IMAX Digital',
+    ];
+
+    // cinematography.frame_size
+    const FRAME_SIZES = [
+      'Extreme Wide', 'Wide', 'Medium Wide', 'Medium', 'Medium Close',
+      'Close', 'Extreme Close', 'Insert', 'Cutaway',
+    ];
+
+    // cinematography.shot_type
+    const SHOT_TYPES = [
+      'Clean Single', 'Dirty Single', 'Two Shot', 'Three Shot', 'Group Shot',
+      'Over-the-Shoulder', 'POV', 'Reaction', 'Establishing', 'Master',
+      'Tracking', 'Dolly', 'Steadicam', 'Crane', 'Aerial', 'Static', 'Handheld',
+    ];
+
+    // cinematography.lens_size
+    const LENS_SIZES = [
+      'Ultra Wide', 'Wide', 'Medium Wide', 'Normal', 'Medium Telephoto',
+      'Telephoto', 'Super Telephoto', 'Macro',
+    ];
+
+    // cinematography.composition (multi-select)
+    const COMPOSITIONS = [
+      'Center', 'Rule of Thirds', 'Symmetrical', 'Asymmetrical', 'Golden Ratio',
+      'Leading Lines', 'Diagonal', 'Frame within Frame', 'Negative Space',
+      'Foreground Interest', 'Depth Layering', 'Dutch Angle', 'Worms Eye', 'Birds Eye',
+    ];
+
+    // lighting.description (multi-select)
+    const LIGHTING_DESC = [
+      'Natural Light', 'Soft Light', 'Hard Light', 'Diffused', 'Low Contrast',
+      'High Contrast', 'Backlight', 'Rim Light', 'Side Light', 'Top Light',
+      'Bounce Light', 'Practical Light', 'Ambient', 'Chiaroscuro', 'Silhouette',
+      'Lens Flare', 'God Rays', 'Neon Glow', 'Candlelight', 'Firelight',
+      'Golden Hour', 'Blue Hour', 'Overcast',
+    ];
+
+    // lighting.type
+    const LIGHTING_TYPES = [
+      'Natural Light', 'Artificial Light', 'Mixed Light',
+      'Practical Light', 'Available Light', 'Studio Light',
+    ];
+
+    // time_of_day
+    const TIMES_OF_DAY = [
+      'Dawn', 'Sunrise', 'Morning', 'Late Morning', 'Midday',
+      'Afternoon', 'Late Afternoon', 'Golden Hour', 'Sunset',
+      'Dusk', 'Twilight', 'Blue Hour', 'Evening', 'Night', 'Midnight',
+    ];
+
+    // interior_exterior
+    const INT_EXT = ['Interior', 'Exterior', 'Int/Ext'];
+
+    // location_type
+    const LOCATION_TYPES = [
+      'Urban', 'Suburban', 'Rural', 'Wilderness', 'Coastal', 'Desert',
+      'Mountain', 'Forest', 'Industrial', 'Commercial', 'Residential',
+      'Underground', 'Aerial', 'Underwater', 'Space', 'Studio / Soundstage',
+    ];
+
+    // visuals.color (multi-select)
+    const COLORS = [
+      'Warm', 'Cool', 'Neutral', 'Saturated', 'Desaturated', 'Monochrome',
+      'High Contrast', 'Low Contrast', 'Muted', 'Vibrant',
+      'Red', 'Orange', 'Yellow', 'Green', 'Cyan', 'Blue', 'Indigo',
+      'Violet', 'Magenta', 'Pink', 'Gold', 'Sepia', 'Teal',
+      'Earth Tones', 'Pastel', 'Neon',
+    ];
+
+    // time_period
+    const TIME_PERIODS = [
+      'Ancient', 'Medieval', 'Renaissance', '1700s', '1800s', '1900s',
+      '1910s', '1920s', '1930s', '1940s', '1950s', '1960s', '1970s',
+      '1980s', '1990s', '2000s', '2010s', 'Contemporary', 'Near Future',
+      'Far Future', 'Timeless',
+    ];
+
+    // equipment.camera
+    const CAMERAS = [
+      'Arriflex 435', 'ARRI Alexa 35', 'ARRI Alexa Mini LF', 'Sony Venice 2',
+      'RED V-RAPTOR 8K', 'Panavision Panaflex', 'Panavision Millennium XL2',
+      'Blackmagic URSA 12K', 'Canon EOS C500', 'IMAX MSM 9802',
+    ];
+
+    // equipment.lens
+    const LENSES = [
+      'ARRI Signature Prime', 'Zeiss Master Prime', 'Cooke S7/i',
+      'Panavision Primo Prime', 'Panavision Primo Zoom', 'Leica Summilux-C',
+      'Canon CN-E', 'Zeiss Super Speed', 'Cooke Speed Panchro', 'Angenieux Optimo',
+    ];
+
+    // equipment.film_stock
+    const FILM_STOCKS = [
+      'Kodak Vision3 500T 5219', 'Kodak Vision3 250D 5207', 'Kodak Vision3 50D 5203',
+      'Kodak 5297 EXR 250D', 'Kodak 5274 Vision 200T', 'Fujifilm Eterna 500T',
+      'Fujifilm Eterna Vivid 160T', 'Ilford HP5 Plus 400', 'Kodak Tri-X 400',
+      'Kodak Portra 400',
+    ];
+
+    // Google AI Studio supported aspect ratios (all official values)
+    const ASPECT_RATIOS = [
+      { label: '1:1', apiVal: '1:1', w: 1, h: 1, name: 'Square' },
+      { label: '4:3', apiVal: '4:3', w: 4, h: 3, name: 'Classic' },
+      { label: '3:4', apiVal: '3:4', w: 3, h: 4, name: 'Tall' },
+      { label: '3:2', apiVal: '3:2', w: 3, h: 2, name: '35mm' },
+      { label: '2:3', apiVal: '2:3', w: 2, h: 3, name: 'Portrait' },
+      { label: '5:4', apiVal: '5:4', w: 5, h: 4, name: 'Med. Fmt' },
+      { label: '4:5', apiVal: '4:5', w: 4, h: 5, name: 'Port. 4:5' },
+      { label: '16:9', apiVal: '16:9', w: 16, h: 9, name: 'HD / 4K' },
+      { label: '9:16', apiVal: '9:16', w: 9, h: 16, name: 'Vertical' },
+      { label: '21:9', apiVal: '21:9', w: 21, h: 9, name: 'UltraWide' },
+      { label: '4:1', apiVal: '4:1', w: 4, h: 1, name: 'Panorama' },
+      { label: '1:4', apiVal: '1:4', w: 1, h: 4, name: 'Tall Strip' },
+      { label: '8:1', apiVal: '8:1', w: 8, h: 1, name: 'Cinema Bar' },
+      { label: '1:8', apiVal: '1:8', w: 1, h: 8, name: 'Tall Strip 8' },
+    ];
+
+    // Kie.ai Nano Banana Pro supported resolutions
+    const RES_TIERS = [
+      { label: '1K', apiVal: '1K', sub: '~1024px' },
+      { label: '2K', apiVal: '2K', sub: '~2048px' },
+      { label: '4K', apiVal: '4K', sub: '~4096px' },
+    ];
+
+    // CINEFRAME-OMEGA extraction price
+    const EXTRACT_PRICE = 0.0003;
+
+    // ══════════════════════════════════════════
+    //  CAMERA CONTROL — Equipment Data
+    // ══════════════════════════════════════════
+    const CC_CAMERAS = [
+      { name: 'Studio Digital S35', type: 'DIGITAL', spec: 'Super 35 Sensor',
+        desc: 'Super 35 digital sensor. Clean image, punchy saturated colors, slight crop.' },
+      { name: 'Modular 8K Digital', type: 'DIGITAL', spec: '8K VV Sensor',
+        desc: '8K Vista Vision sensor. Extreme fine detail in textures, noiseless shadows.' },
+      { name: 'Full-Frame Cine Digital', type: 'DIGITAL', spec: 'Full Frame Dual ISO',
+        desc: 'Full-frame sensor. Wide dynamic range, clean shadows, natural background separation.' },
+      { name: 'Premium Large Format Digital', type: 'DIGITAL', spec: 'Large Format',
+        desc: 'Large format sensor. 3D depth pop, creamy tonal transitions, ultra-shallow depth of field.' },
+      { name: 'Classic 16mm Film', type: 'FILM', spec: '16mm Film',
+        desc: '16mm film. Coarse visible grain, soft organic edges, muted desaturated palette.' },
+      { name: 'Grand Format 70mm Film', type: 'FILM', spec: '65mm/70mm Film',
+        desc: '70mm film. Fine grain, rich saturated colors, edge-to-edge clarity, IMAX-like depth.' },
+    ];
+    const CC_LENSES = [
+      { name: 'Premium Modern Prime', type: 'SPHERICAL',
+        desc: 'Razor-sharp modern lens. Clean clarity, round bokeh, neutral colors.' },
+      { name: 'Warm Cinema Prime', type: 'SPHERICAL',
+        desc: 'Warm-coated cinema lens. Golden color cast, smooth highlight rolloff, gentle glow on lights.' },
+      { name: '70s Cinema Prime', type: 'SPHERICAL',
+        desc: 'Vintage 1970s lens. Low contrast haze, rainbow chromatic aberration on edges, blooming flare bursts into light.' },
+      { name: 'Clinical Sharp Prime', type: 'SPHERICAL',
+        desc: 'Clinical precision lens. Hyper-sharp, high micro-contrast, cool neutral tone.' },
+      { name: 'Vintage Prime', type: 'SPHERICAL',
+        desc: 'Aged vintage lens. Soft center glow, low contrast, warm shift, swirly bokeh at edges.' },
+      { name: 'Swirl Bokeh Portrait', type: 'SPHERICAL',
+        desc: 'Swirl bokeh lens. Background highlights twist in spiral patterns around the subject.' },
+      { name: 'Creative Tilt Lens', type: 'SPHERICAL',
+        desc: 'Tilt-shift lens. Thin diagonal band of focus, everything else blurs into miniature diorama effect.' },
+      { name: 'Extreme Macro', type: 'SPHERICAL',
+        desc: 'Macro lens, extreme close-up. Microscopic surface detail, hair-thin sliver of focus.' },
+      { name: 'Compact Anamorphic', type: 'ANAMORPHIC',
+        desc: 'Anamorphic lens. Horizontal blue streak flares from light sources, oval bokeh, subtle barrel distortion.' },
+      { name: 'Classic Anamorphic', type: 'ANAMORPHIC',
+        desc: 'Classic anamorphic lens. Intense horizontal streak flares from every light, strongly oval bokeh, pronounced barrel distortion, warm amber flare veiling.' },
+      { name: 'Halation Diffusion', type: 'FILTER',
+        desc: 'Diffusion filter. Highlights bloom with halation glow, reduced contrast, warm halos around lights, dreamy look.' },
+    ];
+    const CC_FOCAL_STEPS = [8, 10, 12, 14, 16, 18, 20, 24, 28, 32, 35, 40, 45, 50];
+    const CC_APERTURE_STEPS = [1.4, 2, 2.8, 4, 5.6, 8, 11, 16];
+
+    // ══════════════════════════════════════════
+    //  STATE
+    // ══════════════════════════════════════════
+    const S = {
+      // Core
+      aspectRatio: 7,    // 16:9 index
+      resTier: '2K',
+      outputFormat: 'jpg',
+      grounding: false,
+      thinking: false,
+      variationCount: 1,
+      currentUrl: '',
+      currentBlob: null,
+      currentMime: '',
+      lastEnhancedPrompt: '',
+      enhancedSettings: {},
+      refImages: [],
+      totalSpent: 0,
+
+      // Master toggle
+      useCameraSettings: true,
+
+      // CINEFRAME-OMEGA settings (all strings, exact values)
+      format: 'Film - 35mm',
+      frameSize: 'Medium',
+      shotType: 'Clean Single',
+      lensSize: 'Normal',
+      composition: [],        // multi-select
+      lightingDesc: [],       // multi-select
+      lightingType: 'Natural Light',
+      timeOfDay: 'Golden Hour',
+      intExt: 'Exterior',
+      locationType: 'Urban',
+      set: '',                // free text
+      timePeriod: 'Contemporary',
+      camera: 'ARRI Alexa 35',
+      lens: 'ARRI Signature Prime',
+      filmStock: 'Kodak Vision3 500T 5219',
+      colors: [],             // multi-select
+      paletteHex: [],         // visual only
+      extractedTags: [],      // mood/feel tags from CINEFRAME-OMEGA
+
+      // Enable toggles (one per setting)
+      enableFormat: false,
+      enableFrameSize: false,
+      enableShotType: false,
+      enableLensSize: false,
+      enableComposition: false,
+      enableLightingDesc: false,
+      enableLightingType: false,
+      enableTimeOfDay: false,
+      enableIntExt: false,
+      enableLocationType: false,
+      enableSet: false,
+      enableTimePeriod: false,
+      enableCamera: false,
+      enableLens: false,
+      enableFilmStock: false,
+      enableColors: false,
+      enablePaletteHex: false,
+
+      // Camera Control state
+      ccCamera: 0,          // index into CC_CAMERAS
+      ccLens: 0,            // index into CC_LENSES
+      ccLensFilter: 'ALL',  // ALL | SPHERICAL | ANAMORPHIC | FILTER
+      ccFocal: 10,          // index into CC_FOCAL_STEPS (default 35mm)
+      ccAperture: 0,        // index into CC_APERTURE_STEPS (default f/1.4)
+      ccAspectRatio: 7,     // same ASPECT_RATIOS array, default 16:9
+      ccResTier: '2K',
+      ccVariationCount: 1,
+      ccPrompt: '',
+      ccOpenPicker: null,   // which picker is open: 'camera'|'lens'|'focal'|'aperture'|null
+    };
+
+    // Per-image generation cost by resolution (Gemini 3 Pro Image)
+    const GEN_PRICE = { '1K': 0.039, '2K': 0.134, '4K': 0.24 };
+    // Enhance cost is negligible (~$0.0002 per call) but we track it
+    const ENHANCE_PRICE = 0.0002;
+    const UPSCALE_PRICE = { '2K': 0.134, '4K': 0.24 };
+
+    // ══════════════════════════════════════════
+    //  API KEY
+    // ══════════════════════════════════════════
+    const DEFAULT_KEY = 'AIzaSyB5--ctXjujSwODtnFMEtTKd4k8va-NhEg';
+
+    function loadApiKey() {
+      const k = localStorage.getItem('gai_api_key') || DEFAULT_KEY;
+      document.getElementById('apikeyInput').value = k;
+      updateKeyStatus(k);
+    }
+    function saveApiKey(val) {
+      localStorage.setItem('gai_api_key', val.trim());
+      updateKeyStatus(val.trim());
+    }
+    function getApiKey() {
+      return (document.getElementById('apikeyInput').value || '').trim();
+    }
+    function updateKeyStatus(key) {
+      const span = document.getElementById('keyStatus');
+      if (key) {
+        span.innerHTML = '<span class="status-dot dot-green"></span> AI Studio';
+      } else {
+        span.innerHTML = '<span class="status-dot dot-red"></span> No key';
+      }
+    }
+    function toggleApiKeyVis() {
+      const inp = document.getElementById('apikeyInput');
+      inp.type = inp.type === 'password' ? 'text' : 'password';
+    }
+
+
+    // ══════════════════════════════════════════
+    //  INDEXEDDB — generation history
+    // ══════════════════════════════════════════
+    let db;
+    function initDB() {
+      return new Promise((resolve, reject) => {
+        const req = indexedDB.open('NanoBananaPro', 2);
+        req.onupgradeneeded = e => {
+          const d = e.target.result;
+          if (!d.objectStoreNames.contains('history')) {
+            const store = d.createObjectStore('history', { keyPath: 'id', autoIncrement: true });
+            store.createIndex('timestamp', 'timestamp', { unique: false });
+          }
+          if (!d.objectStoreNames.contains('handles')) {
+            d.createObjectStore('handles');
+          }
+        };
+        req.onsuccess = e => { db = e.target.result; resolve(); };
+        req.onerror = () => reject(req.error);
+      });
+    }
+    function saveToHistory(entry) {
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction('history', 'readwrite');
+        const req = tx.objectStore('history').add(entry);
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error);
+      });
+    }
+    function getAllHistory() {
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction('history', 'readonly');
+        const req = tx.objectStore('history').getAll();
+        req.onsuccess = () => resolve([...req.result].reverse());
+        req.onerror = () => reject(req.error);
+      });
+    }
+    function deleteFromHistory(id) {
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction('history', 'readwrite');
+        const req = tx.objectStore('history').delete(id);
+        req.onsuccess = resolve;
+        req.onerror = () => reject(req.error);
+      });
+    }
+
+    // ══════════════════════════════════════════
+    //  FILE SYSTEM ACCESS — auto-save to outputs/
+    // ══════════════════════════════════════════
+    let outputDirHandle = null;
+
+    function saveDirHandle(handle) {
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction('handles', 'readwrite');
+        const req = tx.objectStore('handles').put(handle, 'outputDir');
+        req.onsuccess = resolve;
+        req.onerror = () => reject(req.error);
+      });
+    }
+
+    function loadDirHandle() {
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction('handles', 'readonly');
+        const req = tx.objectStore('handles').get('outputDir');
+        req.onsuccess = () => resolve(req.result || null);
+        req.onerror = () => resolve(null);
+      });
+    }
+
+    async function restoreOutputFolder() {
+      try {
+        const handle = await loadDirHandle();
+        if (!handle) return;
+        // Check if permission is still granted (no prompt needed if it is)
+        const perm = await handle.queryPermission({ mode: 'readwrite' });
+        if (perm === 'granted') {
+          outputDirHandle = handle;
+          updateFolderStatus();
+        } else {
+          // Permission lapsed — store handle ready, will re-request on next generate
+          outputDirHandle = handle;
+          updateFolderStatus();
+        }
+      } catch (e) {
+        console.warn('Could not restore output folder:', e);
+      }
+    }
+
+    async function selectOutputFolder() {
+      try {
+        outputDirHandle = await window.showDirectoryPicker({ mode: 'readwrite', startIn: 'downloads' });
+        await saveDirHandle(outputDirHandle);
+        updateFolderStatus();
+      } catch (e) {
+        if (e.name !== 'AbortError') console.warn('Folder select failed:', e.message);
+      }
+    }
+
+    async function ensureOutputFolder() {
+      if (outputDirHandle) {
+        // Re-request permission if needed (browser requires user gesture)
+        const perm = await outputDirHandle.queryPermission({ mode: 'readwrite' });
+        if (perm !== 'granted') {
+          const newPerm = await outputDirHandle.requestPermission({ mode: 'readwrite' });
+          if (newPerm !== 'granted') return false;
+        }
+        return true;
+      }
+      try {
+        outputDirHandle = await window.showDirectoryPicker({ mode: 'readwrite', startIn: 'downloads' });
+        await saveDirHandle(outputDirHandle);
+        updateFolderStatus();
+        return true;
+      } catch (e) {
+        return false; // user cancelled — generation still proceeds
+      }
+    }
+
+    function updateFolderStatus() {
+      const dot = document.getElementById('folderDot');
+      const label = document.getElementById('folderLabel');
+      if (outputDirHandle) {
+        dot.style.cssText = 'background:var(--green);box-shadow:0 0 6px var(--green);';
+        label.textContent = `📂 ${outputDirHandle.name}`;
+      } else {
+        dot.style.cssText = 'background:var(--text-muted);box-shadow:none;';
+        label.textContent = 'No output folder — ';
+      }
+    }
+
+    async function autoSaveToFolder(blob, prompt) {
+      if (!outputDirHandle) return;
+      try {
+        const versionDir = await outputDirHandle.getDirectoryHandle(APP_VERSION, { create: true });
+        const cleaned = prompt.replace(/[<>:"/\\|?*\n\r]/g, '').trim();
+        const safeName = cleaned.length > 160 ? cleaned.slice(0, 160).replace(/\s+\S*$/, '') : cleaned;
+        const filename = `${safeName || 'generation'} ${Date.now()}.png`;
+        const fileHandle = await versionDir.getFileHandle(filename, { create: true });
+        const writable = await fileHandle.createWritable();
+        await writable.write(blob);
+        await writable.close();
+      } catch (e) {
+        console.warn('Auto-save to folder failed:', e);
+      }
+    }
+
+    // ══════════════════════════════════════════
+    //  HISTORY DETAIL PANEL
+    // ══════════════════════════════════════════
+    let currentDetailItem = null;
+
+    function showDetailPanel(item) {
+      currentDetailItem = item;
+      document.getElementById('detailImage').src = item.dataUrl;
+      document.getElementById('detailPromptText').textContent = item.prompt;
+      const date = new Date(item.timestamp).toLocaleString();
+      let metaHtml =
+        `<div><b>Version:</b> ${item.version}</div>
+         <div><b>Resolution:</b> ${item.resolution}</div>
+         <div><b>Aspect Ratio:</b> ${item.aspectRatio}</div>
+         <div><b>Created:</b> ${date}</div>`;
+      if (item.scaledFrom) {
+        metaHtml += `<div><b>Scaled from:</b> ${item.scaledFrom} → ${item.resolution}</div>`;
+      }
+      if (item.source === 'camera-control') {
+        metaHtml += `<div><b>Camera:</b> ${item.camera}</div>`;
+        metaHtml += `<div><b>Lens:</b> ${item.lens}</div>`;
+        metaHtml += `<div><b>Focal:</b> ${item.focalLength}</div>`;
+        metaHtml += `<div><b>Aperture:</b> ${item.aperture}</div>`;
+      }
+      document.getElementById('detailMetaText').innerHTML = metaHtml;
+      // Show reference / original image if saved with this entry
+      const refImg = document.getElementById('detailRefImage');
+      const refLabel = document.getElementById('detailRefLabel');
+      if (item.refImageDataUrl) {
+        refImg.src = item.refImageDataUrl;
+        refImg.style.display = 'block';
+        refLabel.textContent = item.scaledFrom ? 'Original Image' : 'Reference Image';
+        refLabel.style.display = '';
+      } else {
+        refImg.src = '';
+        refImg.style.display = 'none';
+        refLabel.style.display = 'none';
+      }
+      // Hide upscale picker when switching items
+      document.getElementById('upscalePicker').style.display = 'none';
+      // Open fullscreen with this image and raise the panel above it
+      openFullscreen(item.dataUrl);
+      document.getElementById('detailPanel').style.zIndex = '10001';
+      document.getElementById('detailPanel').classList.add('open');
+    }
+
+    function closeDetailPanel() {
+      const panel = document.getElementById('detailPanel');
+      panel.classList.remove('open');
+      panel.style.zIndex = ''; // reset elevation if it was raised for variation fullscreen
+      closeFullscreen();
+      currentDetailItem = null;
+    }
+
+    function copyDetailPrompt() {
+      if (!currentDetailItem) return;
+      navigator.clipboard.writeText(currentDetailItem.prompt).then(() => {
+        const btn = event.target;
+        const orig = btn.textContent;
+        btn.textContent = '✓ Copied!';
+        btn.style.color = 'var(--green)';
+        setTimeout(() => { btn.textContent = orig; btn.style.color = ''; }, 1500);
+      });
+    }
+
+    function downloadDetailImage() {
+      if (!currentDetailItem) return;
+      const a = document.createElement('a');
+      a.href = currentDetailItem.dataUrl;
+      const safeName = currentDetailItem.prompt.slice(0, 60).replace(/[<>:"/\\|?*\n\r]/g, '').trim() || 'generation';
+      a.download = `${safeName} ${currentDetailItem.timestamp}.png`;
+      a.click();
+    }
+
+    function useAsReference() {
+      if (!currentDetailItem) return;
+      if (S.refImages.length >= MAX_REF_IMAGES) {
+        showError(`Max ${MAX_REF_IMAGES} reference images reached.`);
+        return;
+      }
+      const dataUrl = currentDetailItem.dataUrl;
+      const mimeType = currentDetailItem.mimeType || 'image/png';
+      const base64 = dataUrl.split(',')[1];
+      S.refImages.push({ dataUrl, mimeType, base64 });
+      renderRefThumbs();
+      closeDetailPanel();
+      // Switch to Studio tab
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelector('.tab').classList.add('active'); // first tab = Studio
+      document.getElementById('studioView').style.display = 'grid';
+      document.getElementById('historyView').style.display = 'none';
+    }
+
+    function openRefThumb(index) {
+      const img = S.refImages[index];
+      if (!img) return;
+      showDetailPanel({
+        dataUrl: img.dataUrl,
+        mimeType: img.mimeType || 'image/png',
+        prompt: '(Reference image)',
+        timestamp: Date.now(),
+        version: APP_VERSION,
+        resolution: '',
+        aspectRatio: '',
+      });
+    }
+
+    function openRefFromDetail() {
+      if (!currentDetailItem || !currentDetailItem.refImageDataUrl) return;
+      // Show the reference image as its own detail item with full actions
+      const refItem = {
+        dataUrl: currentDetailItem.refImageDataUrl,
+        mimeType: 'image/png',
+        prompt: '(Reference image)',
+        timestamp: currentDetailItem.timestamp,
+        version: currentDetailItem.version || APP_VERSION,
+        resolution: '',
+        aspectRatio: '',
+      };
+      showDetailPanel(refItem);
+    }
+
+    function editImage() {
+      if (!currentDetailItem) return;
+      // Clear all existing references
+      S.refImages.length = 0;
+      // Add this image as the sole reference
+      const dataUrl = currentDetailItem.dataUrl;
+      const mimeType = currentDetailItem.mimeType || 'image/png';
+      const base64 = dataUrl.split(',')[1];
+      S.refImages.push({ dataUrl, mimeType, base64 });
+      renderRefThumbs();
+      closeDetailPanel();
+      // Switch to Studio tab
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelector('.tab').classList.add('active');
+      document.getElementById('studioView').style.display = 'grid';
+      document.getElementById('historyView').style.display = 'none';
+    }
+
+    // ══════════════════════════════════════════
+    //  UPSCALE IMAGE — pick target res, then re-generate
+    // ══════════════════════════════════════════
+    function toggleUpscalePicker() {
+      if (!currentDetailItem) return;
+      const picker = document.getElementById('upscalePicker');
+      if (picker.style.display !== 'none') { picker.style.display = 'none'; return; }
+
+      const curRes = currentDetailItem.resolution || '1K';
+      const options = [];
+      if (curRes === '1K') options.push('2K', '4K');
+      else if (curRes === '2K') options.push('4K');
+
+      if (!options.length) { showError('Image is already at 4K — nothing to upscale.'); return; }
+
+      document.getElementById('upscaleOptions').innerHTML = options.map(r =>
+        `<button onclick="runUpscale('${r}')" style="
+          flex:1;padding:8px 12px;background:var(--bg-elevated);border:1px solid var(--border);
+          border-radius:6px;cursor:pointer;color:var(--text-secondary);font-size:12px;
+          font-family:var(--font);font-weight:600;transition:all .15s;"
+          onmouseenter="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'"
+          onmouseleave="this.style.borderColor='var(--border)';this.style.color='var(--text-secondary)'"
+        >${r} · $${(UPSCALE_PRICE[r] || 0.134).toFixed(3)}</button>`
+      ).join('');
+      picker.style.display = 'block';
+    }
+
+    async function runUpscale(targetRes) {
+      if (!currentDetailItem) return;
+
+      const apiKey = getApiKey();
+      if (!apiKey) { showError('No API key found. Please paste your Google AI Studio key in the top-right field.'); return; }
+
+      const curRes = currentDetailItem.resolution || '1K';
+      document.getElementById('upscalePicker').style.display = 'none';
+
+      const btn = document.getElementById('upscaleBtn');
+      const origText = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = '⏳ Upscaling…';
+
+      const dataUrl = currentDetailItem.dataUrl;
+      const mimeType = currentDetailItem.mimeType || 'image/png';
+      const base64 = dataUrl.split(',')[1];
+      const arLabel = currentDetailItem.aspectRatio || '1:1';
+      const ar = ASPECT_RATIOS.find(a => a.label === arLabel) || ASPECT_RATIOS[0];
+
+      const body = {
+        contents: [{ parts: [
+          { text: `Recreate this exact image at higher resolution. Only add fine detail and sharpness. This is a strict upscale — you MUST preserve the EXACT same colors, color grading, tones, contrast, saturation, hue, white balance, shadows, and highlights. Keep every pixel's color faithful to the original. Same composition, same lighting, same everything. Avoid: color correction, tone shifting, warm/cool shift, brightening, darkening, saturation changes, hue shift, white balance changes, contrast changes, recoloring, style transfer.` },
+          { inlineData: { mimeType, data: base64 } },
+        ]}],
+        generationConfig: {
+          responseModalities: ['TEXT', 'IMAGE'],
+          imageConfig: { aspectRatio: ar.apiVal, imageSize: targetRes },
+        },
+      };
+
+      try {
+        const resp = await fetch(`${GENDPOINT}?key=${apiKey}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        });
+        const data = await resp.json();
+        if (!resp.ok) throw new Error(data.error?.message || `HTTP ${resp.status}`);
+
+        const parts = (data.candidates?.[0]?.content?.parts || []).filter(p => !p.thought);
+        const imgPart = parts.find(p => p.inlineData);
+        if (!imgPart) {
+          const textPart = parts.find(p => p.text);
+          throw new Error(textPart?.text || 'No image returned. The model may have declined.');
+        }
+
+        const newB64 = imgPart.inlineData.data;
+        const newMime = imgPart.inlineData.mimeType || 'image/png';
+        const newDataUrl = `data:${newMime};base64,${newB64}`;
+
+        S.totalSpent += UPSCALE_PRICE[targetRes] || 0.134;
+        updateTotalSpent();
+
+        const newEntry = {
+          prompt: currentDetailItem.prompt,
+          timestamp: Date.now(),
+          version: APP_VERSION,
+          aspectRatio: ar.label,
+          resolution: targetRes,
+          mimeType: newMime,
+          dataUrl: newDataUrl,
+          refImageDataUrl: currentDetailItem.dataUrl,
+          scaledFrom: curRes,
+        };
+        await saveToHistory(newEntry);
+
+        const binary = atob(newB64);
+        const bytes = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+        const blob = new Blob([bytes], { type: newMime });
+        ensureOutputFolder().then(() => autoSaveToFolder(blob, newEntry.prompt));
+
+        showDetailPanel(newEntry);
+
+      } catch (err) {
+        showError('Upscale failed: ' + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = origText;
+      }
+    }
+
+    // ══════════════════════════════════════════
+    //  TAB SWITCHING
+    // ══════════════════════════════════════════
+    function switchTab(tab, el) {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      el.classList.add('active');
+      const studio = document.getElementById('studioView');
+      const camera = document.getElementById('cameraView');
+      const history = document.getElementById('historyView');
+      studio.style.display  = 'none';
+      camera.style.display  = 'none';
+      history.style.display = 'none';
+      if (tab === 'studio') {
+        studio.style.display = 'grid';
+      } else if (tab === 'camera') {
+        camera.style.display = 'flex';
+        ccRenderAll();
+      } else if (tab === 'history') {
+        history.style.display = 'flex';
+        loadHistoryGrid();
+      }
+    }
+
+    async function loadHistoryGrid() {
+      const grid = document.getElementById('historyGrid');
+      const items = await getAllHistory();
+      if (!items.length) {
+        grid.innerHTML = '<div class="history-empty">No generations yet. Generate an image to get started.</div>';
+        return;
+      }
+      grid.innerHTML = items.map(item => {
+        const date = new Date(item.timestamp).toLocaleString();
+        const esc = item.prompt.replace(/"/g, '&quot;').replace(/</g, '&lt;');
+        return `<div class="history-card" onclick="openDetailPanel(${item.id})" style="cursor:pointer;">
+          <div class="history-thumb-wrap">
+            <img class="history-thumb" src="${item.dataUrl}" alt="Generation" loading="lazy">
+          </div>
+          <div class="history-info">
+            <div class="history-prompt">${esc}</div>
+            <div class="history-meta">${item.version} · ${item.resolution} · ${date}</div>
+            <button class="history-dl-btn" onclick="event.stopPropagation(); downloadHistoryItem(${item.id})">⬇ Download</button>
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    async function openDetailPanel(id) {
+      const items = await getAllHistory();
+      const item = items.find(i => i.id === id);
+      if (item) showDetailPanel(item);
+    }
+
+    async function downloadHistoryItem(id) {
+      const items = await getAllHistory();
+      const item = items.find(i => i.id === id);
+      if (!item) return;
+      const a = document.createElement('a');
+      a.href = item.dataUrl;
+      a.download = item.prompt.slice(0, 60).replace(/[<>:"/\\|?*\n\r]/g, '').trim() + '.png';
+      a.click();
+    }
+
+    // ══════════════════════════════════════════
+    //  RENDER
+    // ══════════════════════════════════════════
+    function init() {
+      initDB().then(() => restoreOutputFolder()).catch(e => console.warn('IndexedDB init failed:', e));
+      document.getElementById('versionBadge').textContent = APP_VERSION;
+      loadApiKey();
+      renderAspectGrid();
+      renderResTiers();
+      renderFmtGroup();
+      renderAllSettings();
+      updateGenPrice();
+      rebuildPrompt();
+      window.addEventListener('resize', () => { updatePreviewSize(); ccUpdatePreviewSize(); });
+      setTimeout(updatePreviewSize, 80);
+    }
+
+    // Single-select pills — value stored as string in S[key]
+    function renderPills(id, arr, key) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.innerHTML = arr.map(v => {
+        const esc = v.replace(/"/g, '&quot;');
+        return `<div class="pill${v === S[key] ? ' active' : ''}" data-key="${key}" data-val="${esc}" data-group="${id}">${v}</div>`;
+      }).join('');
+      el.querySelectorAll('.pill').forEach(p => {
+        p.addEventListener('click', () => {
+          S[p.dataset.key] = p.dataset.val;
+          document.querySelectorAll(`#${p.dataset.group} .pill`).forEach(x => x.classList.remove('active'));
+          p.classList.add('active');
+          rebuildPrompt();
+        });
+      });
+    }
+
+    // Multi-select pills — value stored as array in S[key]
+    function renderMultiPills(id, arr, key) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.innerHTML = arr.map(v => {
+        const esc = v.replace(/"/g, '&quot;');
+        const isActive = S[key].includes(v);
+        return `<div class="pill${isActive ? ' active' : ''}" data-key="${key}" data-val="${esc}" data-group="${id}">${v}</div>`;
+      }).join('');
+      el.querySelectorAll('.pill').forEach(p => {
+        p.addEventListener('click', () => {
+          const val = p.dataset.val;
+          const a = S[p.dataset.key];
+          const idx = a.indexOf(val);
+          if (idx >= 0) { a.splice(idx, 1); p.classList.remove('active'); }
+          else { a.push(val); p.classList.add('active'); }
+          rebuildPrompt();
+        });
+      });
+    }
+
+    // Palette hex visual swatches
+    function renderPaletteHex() {
+      const el = document.getElementById('paletteHexGroup');
+      if (!el) return;
+      if (!S.paletteHex.length) {
+        el.innerHTML = '<span style="font-size:10px;color:var(--text-muted);">Auto-filled by Scene Extractor</span>';
+        return;
+      }
+      el.innerHTML = S.paletteHex.map(hex =>
+        `<div class="palette-dot" style="background:${hex};" title="${hex}"></div>`
+      ).join('');
+    }
+
+    // Render all CINEFRAME-OMEGA settings
+    function renderAllSettings() {
+      // Cinematography
+      renderPills('formatGroup', FORMATS, 'format');
+      renderPills('frameSizeGroup', FRAME_SIZES, 'frameSize');
+      renderPills('shotTypeGroup', SHOT_TYPES, 'shotType');
+      renderPills('lensSizeGroup', LENS_SIZES, 'lensSize');
+      renderMultiPills('compositionGroup', COMPOSITIONS, 'composition');
+      // Lighting
+      renderMultiPills('lightingDescGroup', LIGHTING_DESC, 'lightingDesc');
+      renderPills('lightingTypeGroup', LIGHTING_TYPES, 'lightingType');
+      // Environment
+      renderPills('timeOfDayGroup', TIMES_OF_DAY, 'timeOfDay');
+      renderPills('intExtGroup', INT_EXT, 'intExt');
+      renderPills('locationTypeGroup', LOCATION_TYPES, 'locationType');
+      renderPills('timePeriodGroup', TIME_PERIODS, 'timePeriod');
+      // Equipment
+      renderPills('filmStockGroup', FILM_STOCKS, 'filmStock');
+      renderPills('cameraGroup', CAMERAS, 'camera');
+      renderPills('lensGroup', LENSES, 'lens');
+      // Visuals
+      renderMultiPills('colorsGroup', COLORS, 'colors');
+      renderPaletteHex();
+      // Set text input
+      const setInput = document.getElementById('setInput');
+      if (setInput) setInput.value = S.set;
+      // Sync all toggle checkboxes
+      syncToggles();
+    }
+
+    function syncToggles() {
+      const map = {
+        enableFormat: 'togFormat', enableFrameSize: 'togFrameSize', enableShotType: 'togShotType',
+        enableLensSize: 'togLensSize', enableComposition: 'togComposition',
+        enableLightingDesc: 'togLightingDesc', enableLightingType: 'togLightingType',
+        enableTimeOfDay: 'togTimeOfDay', enableIntExt: 'togIntExt',
+        enableLocationType: 'togLocationType', enableSet: 'togSet',
+        enableTimePeriod: 'togTimePeriod', enableFilmStock: 'togFilmStock',
+        enableCamera: 'togCamera', enableLens: 'togLens',
+        enableColors: 'togColors', enablePaletteHex: 'togPaletteHex',
+      };
+      for (const [key, id] of Object.entries(map)) {
+        const el = document.getElementById(id);
+        if (el) el.checked = S[key];
+      }
+    }
+    function renderAspectGrid() {
+      document.getElementById('aspectGrid').innerHTML = ASPECT_RATIOS.map((ar, i) => {
+        const max = 28, ratio = ar.w / ar.h;
+        let pw, ph;
+        if (ratio >= 1) { pw = max; ph = Math.round(max / ratio); }
+        else { ph = max; pw = Math.round(max * ratio); }
+        pw = Math.max(8, pw); ph = Math.max(8, ph);
+        return `<div class="aspect-btn${i === S.aspectRatio ? ' active' : ''}" onclick="pickAspect(${i})">
+      <div class="ar-preview" style="width:${pw}px;height:${ph}px;"></div>
+      <div>${ar.label}</div>
+    </div>`;
+      }).join('');
+    }
+    function renderResTiers() {
+      document.getElementById('resTierGroup').innerHTML = RES_TIERS.map(r => `
+    <div class="res-tier-btn${r.apiVal === S.resTier ? ' active' : ''}" onclick="pickResTier('${r.apiVal}')">
+      <div class="res-tier-label">${r.label}</div>
+      <div class="res-tier-sub">${r.sub}</div>
+    </div>`).join('');
+    }
+    function renderFmtGroup() {
+      document.getElementById('fmtGroup').innerHTML = ['jpg', 'png'].map(f => `
+    <div class="fmt-btn${f === S.outputFormat ? ' active' : ''}" onclick="pickFmt('${f}')">${f.toUpperCase()}</div>`).join('');
+    }
+    // ══════════════════════════════════════════
+    //  PICKERS
+    // ══════════════════════════════════════════
+    function pickAspect(i) {
+      S.aspectRatio = i;
+      renderAspectGrid();
+      updatePreviewSize();
+      updateMetadataDisplay();
+      rebuildPrompt();
+    }
+    function updateMetadataDisplay() {
+      const ar = ASPECT_RATIOS[S.aspectRatio];
+      document.getElementById('mAR').textContent = ar.label;
+      document.getElementById('mRes').textContent = S.resTier;
+      document.getElementById('mFmt').textContent = S.outputFormat.toUpperCase();
+      document.getElementById('genMeta').style.display = 'block';
+    }
+
+    function updateGenPrice() {
+      const unitPrice = GEN_PRICE[S.resTier] || 0.134;
+      const total = unitPrice * S.variationCount;
+      document.getElementById('genPrice').textContent = '$' + total.toFixed(3);
+    }
+
+    function pickVariation(n) {
+      S.variationCount = n;
+      document.querySelectorAll('#varPills .var-pill').forEach((p, i) => {
+        p.classList.toggle('active', i === n - 1);
+      });
+      updateGenPrice();
+    }
+
+    // ══════════════════════════════════════════
+    //  REFERENCE IMAGES
+    // ══════════════════════════════════════════
+    const MAX_REF_IMAGES = 14;
+
+    function handleRefFiles(files) {
+      for (const file of files) {
+        if (S.refImages.length >= MAX_REF_IMAGES) break;
+        if (!file.type.startsWith('image/')) continue;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const dataUrl = e.target.result;
+          const base64 = dataUrl.split(',')[1];
+          S.refImages.push({ dataUrl, mimeType: file.type, base64 });
+          renderRefThumbs();
+        };
+        reader.readAsDataURL(file);
+      }
+      // Reset file input so the same file can be re-selected
+      document.getElementById('refFileInput').value = '';
+    }
+
+    function removeRefImage(idx) {
+      S.refImages.splice(idx, 1);
+      renderRefThumbs();
+    }
+
+    function renderRefThumbs() {
+      const container = document.getElementById('refThumbs');
+      document.getElementById('refCount').textContent = `${S.refImages.length} / ${MAX_REF_IMAGES}`;
+      if (S.refImages.length === 0) {
+        container.innerHTML = '';
+        return;
+      }
+      container.innerHTML = S.refImages.map((img, i) =>
+        `<div class="ref-thumb">
+          <img src="${img.dataUrl}" alt="Ref ${i + 1}" onclick="openRefThumb(${i})" style="cursor:pointer;">
+          <button class="ref-thumb-remove" onclick="event.stopPropagation();removeRefImage(${i})">✕</button>
+        </div>`
+      ).join('');
+    }
+
+    // Drag & drop
+    (() => {
+      const zone = document.getElementById('refUploadZone');
+      zone.addEventListener('dragover', (e) => { e.preventDefault(); zone.classList.add('dragover'); });
+      zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
+      zone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        zone.classList.remove('dragover');
+        handleRefFiles(e.dataTransfer.files);
+      });
+    })();
+
+    function pickResTier(val) {
+      S.resTier = val;
+      renderResTiers();
+      updateMetadataDisplay();
+      updateGenPrice();
+      rebuildPrompt();
+    }
+    function pickFmt(val) {
+      S.outputFormat = val;
+      renderFmtGroup();
+      updateMetadataDisplay();
+    }
+
+    // ══════════════════════════════════════════
+    //  PROMPT BUILDER
+    // ══════════════════════════════════════════
+    function buildPrompt() {
+      const desc = document.getElementById('mainPrompt').value.trim();
+      const parts = [];
+      const c = S.useCameraSettings;
+
+      if (desc) parts.push(desc);
+
+      // Cinematography
+      if (c && S.enableFormat) parts.push(`shot on ${S.format}`);
+      if (c && S.enableFrameSize) parts.push(`${S.frameSize.toLowerCase()} frame`);
+      if (c && S.enableShotType) parts.push(`${S.shotType.toLowerCase()}`);
+      if (c && S.enableLensSize) parts.push(`${S.lensSize.toLowerCase()} lens`);
+      if (c && S.enableComposition && S.composition.length) parts.push(`${S.composition.join(', ').toLowerCase()} composition`);
+
+      // Lighting
+      if (c && S.enableLightingDesc && S.lightingDesc.length) parts.push(S.lightingDesc.join(', ').toLowerCase());
+      if (c && S.enableLightingType) parts.push(S.lightingType.toLowerCase());
+
+      // Environment
+      if (c && S.enableTimeOfDay) parts.push(S.timeOfDay.toLowerCase());
+      if (c && S.enableIntExt) parts.push(S.intExt.toLowerCase());
+      if (c && S.enableLocationType) parts.push(`${S.locationType.toLowerCase()} location`);
+      if (c && S.enableSet && S.set.trim()) parts.push(`set: ${S.set.trim()}`);
+      if (c && S.enableTimePeriod && S.timePeriod !== 'Contemporary') parts.push(`${S.timePeriod.toLowerCase()} era`);
+
+      // Equipment
+      if (c && S.enableFilmStock) parts.push(S.filmStock);
+      if (c && S.enableCamera) parts.push(`shot on ${S.camera}`);
+      if (c && S.enableLens) parts.push(`${S.lens} lens`);
+
+      // Visuals
+      if (c && S.enableColors && S.colors.length) parts.push(`${S.colors.join(', ').toLowerCase()} color palette`);
+
+      return parts.join(', ');
+    }
+
+    // ══════════════════════════════════════════
+    //  ENHANCE PROMPT — gemini-3.1-pro-preview
+    //  Weaves scene description + all camera settings
+    //  into one unified narrative final prompt
+    // ══════════════════════════════════════════
+    async function enhancePrompt() {
+      const raw = document.getElementById('mainPrompt').value.trim();
+      if (!raw) {
+        showError('Type a scene description first, then click Enhance Prompt.');
+        return;
+      }
+      const apiKey = getApiKey();
+      if (!apiKey) {
+        showError('No API key found. Please paste your Google AI Studio key in the top-right field.');
+        return;
+      }
+
+      const btn = document.getElementById('enhanceBtn');
+      btn.disabled = true;
+      btn.textContent = '⏳ Enhancing…';
+      hideError();
+
+      const ar = ASPECT_RATIOS[S.aspectRatio];
+      const cam = S.useCameraSettings;
+
+      // Build grouped style context
+      const sections = [];
+
+      // Aspect ratio always included
+      sections.push(`FRAMING: ${ar.label} (${ar.name})`);
+
+      if (cam) {
+        // Cinematography group
+        const cin = [
+          S.enableFormat ? `Format: ${S.format}` : null,
+          S.enableFrameSize ? `Frame size: ${S.frameSize}` : null,
+          S.enableShotType ? `Shot type: ${S.shotType}` : null,
+          S.enableLensSize ? `Lens: ${S.lensSize}` : null,
+          S.enableComposition && S.composition.length ? `Composition: ${S.composition.join(', ')}` : null,
+        ].filter(Boolean);
+        if (cin.length) sections.push(`CINEMATOGRAPHY:\n${cin.join('\n')}`);
+
+        // Lighting group
+        const lit = [
+          S.enableLightingDesc && S.lightingDesc.length ? `Lighting: ${S.lightingDesc.join(', ')}` : null,
+          S.enableLightingType ? `Lighting type: ${S.lightingType}` : null,
+        ].filter(Boolean);
+        if (lit.length) sections.push(`LIGHTING:\n${lit.join('\n')}`);
+
+        // Environment group
+        const env = [
+          S.enableTimeOfDay ? `Time of day: ${S.timeOfDay}` : null,
+          S.enableIntExt ? `Interior/Exterior: ${S.intExt}` : null,
+          S.enableLocationType ? `Location type: ${S.locationType}` : null,
+          S.enableSet && S.set.trim() ? `Set/Location: ${S.set}` : null,
+          S.enableTimePeriod ? `Time period: ${S.timePeriod}` : null,
+        ].filter(Boolean);
+        if (env.length) sections.push(`ENVIRONMENT:\n${env.join('\n')}`);
+
+        // Equipment group
+        const equip = [
+          S.enableCamera ? `Camera: ${S.camera}` : null,
+          S.enableLens ? `Lens: ${S.lens}` : null,
+          S.enableFilmStock ? `Film stock: ${S.filmStock}` : null,
+        ].filter(Boolean);
+        if (equip.length) sections.push(`EQUIPMENT:\n${equip.join('\n')}`);
+
+        // Visuals group
+        const vis = [
+          S.enableColors && S.colors.length ? `Color tone: ${S.colors.join(', ')}` : null,
+        ].filter(Boolean);
+        if (vis.length) sections.push(`VISUALS:\n${vis.join('\n')}`);
+
+        // Mood tags from extraction
+        if (S.extractedTags.length) {
+          sections.push(`MOOD/FEEL (from reference): ${S.extractedTags.join(', ')}`);
+        }
+      }
+
+      const styleContext = sections.join('\n\n');
+
+      // Load prompt refiner instructions from external .md file
+      let refinerInstructions;
+      try {
+        const mdResp = await fetch('prompt_refiner.md');
+        if (!mdResp.ok) throw new Error(`HTTP ${mdResp.status}`);
+        refinerInstructions = await mdResp.text();
+      } catch (e) {
+        showError('Could not load prompt_refiner.md — make sure it\'s in the same folder as this HTML file.');
+        btn.disabled = false;
+        btn.textContent = '✦ Enhance Prompt';
+        return;
+      }
+
+      const systemInstruction = `${refinerInstructions}
+
+SCENE-FEEL TRANSFER TASK:
+The cinematography settings below were extracted from a cinematic reference image. The user's scene description is their OWN subject — it is NOT related to the reference image's content.
+
+Your job: Write a prompt about the USER'S subject, but dress it in the cinematic feel of the reference. Apply every enabled setting naturally into the narrative — the lighting, the color tone, the lens, the mood — so the generated image will have the same visual atmosphere as the reference, but show an entirely different subject.
+
+CRITICAL OVERRIDE RULE: The user's scene description ALWAYS wins over extracted settings for location, environment, and camera angle. If the user describes a specific place (e.g. "grass field", "rooftop", "beach"), ignore the extracted Set, Location Type, and Interior/Exterior. If the user implies a specific angle or framing (e.g. "close-up of", "aerial view of", "from behind"), ignore the extracted Shot Type, Frame Size, and Composition. Only apply extracted environment/angle settings when the user's description says nothing about them.
+
+Do NOT mention the reference image. Do NOT describe the reference scene. The output prompt should read as if it was always about the user's subject.
+
+Extracted cinematography settings:
+${styleContext}
+
+Write one unified narrative prompt. Show, don't tell. Be specific about physical details. Weave the technical settings into natural descriptive language — not as a list appended at the end.`;
+
+      const body = {
+        contents: [{ parts: [{ text: raw }] }],
+        systemInstruction: { parts: [{ text: systemInstruction }] },
+        generationConfig: { temperature: 0.85, maxOutputTokens: 2000 },
+      };
+
+      try {
+        const resp = await fetch(
+          'https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent',
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
+            body: JSON.stringify(body),
+          }
+        );
+        const data = await resp.json();
+        if (!resp.ok) throw new Error(data.error?.message || `HTTP ${resp.status}`);
+
+        const candidate = data.candidates?.[0];
+        console.log('Full API Response:', data); // Debug: see entire response
+        console.log('Finish Reason:', candidate?.finishReason); // Check if truncated
+        const allParts = candidate?.content?.parts || [];
+        const enhanced = allParts.filter(p => p.text && !p.thought).map(p => p.text).join('').trim();
+        console.log('Enhanced text:', enhanced); // Debug log
+        if (!enhanced) throw new Error('No response from enhancement model.');
+
+        document.getElementById('finalPrompt').value = enhanced;
+        // Track enhance cost
+        S.totalSpent += ENHANCE_PRICE;
+        updateTotalSpent();
+        // Save enhanced prompt and current settings for smart updates
+        S.lastEnhancedPrompt = enhanced;
+        S.enhancedSettings = {
+          format: S.format, frameSize: S.frameSize, shotType: S.shotType,
+          lensSize: S.lensSize, composition: [...S.composition],
+          lightingDesc: [...S.lightingDesc], lightingType: S.lightingType,
+          timeOfDay: S.timeOfDay, intExt: S.intExt, locationType: S.locationType,
+          set: S.set, timePeriod: S.timePeriod,
+          camera: S.camera, lens: S.lens, filmStock: S.filmStock,
+          colors: [...S.colors],
+        };
+      } catch (err) {
+        showError('Enhance failed: ' + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '✦ Enhance Prompt';
+      }
+    }
+
+    // ══════════════════════════════════════════
+    //  APPLY BEST PRACTICES — strips irrelevant details
+    //  and rewrites prompt focusing on descriptive narrative
+    // ══════════════════════════════════════════
+    // Smart update: swap specific parts of the enhanced prompt when settings change
+    function smartUpdateEnhancedPrompt() {
+      if (!S.lastEnhancedPrompt) return;
+
+      let updated = S.lastEnhancedPrompt;
+      const old = S.enhancedSettings;
+
+      // Helper: safe regex replace for exact string values
+      function swapStr(oldVal, newVal) {
+        if (oldVal && newVal && oldVal !== newVal) {
+          try { updated = updated.replace(new RegExp(oldVal.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi'), newVal); } catch(e) {}
+        }
+      }
+
+      // Single-select string replacements
+      swapStr(old.format, S.format);
+      swapStr(old.frameSize, S.frameSize);
+      swapStr(old.shotType, S.shotType);
+      swapStr(old.lensSize, S.lensSize);
+      swapStr(old.lightingType, S.lightingType);
+      swapStr(old.timeOfDay, S.timeOfDay);
+      swapStr(old.intExt, S.intExt);
+      swapStr(old.locationType, S.locationType);
+      swapStr(old.set, S.set);
+      swapStr(old.timePeriod, S.timePeriod);
+      swapStr(old.camera, S.camera);
+      swapStr(old.lens, S.lens);
+      swapStr(old.filmStock, S.filmStock);
+
+      // Multi-select: replace joined old values with joined new values
+      const oldLight = (old.lightingDesc || []).join(', ');
+      const newLight = S.lightingDesc.join(', ');
+      swapStr(oldLight, newLight);
+
+      const oldComp = (old.composition || []).join(', ');
+      const newComp = S.composition.join(', ');
+      swapStr(oldComp, newComp);
+
+      const oldColors = (old.colors || []).join(', ');
+      const newColors = S.colors.join(', ');
+      swapStr(oldColors, newColors);
+
+      document.getElementById('finalPrompt').value = updated;
+      S.lastEnhancedPrompt = updated;
+
+      S.enhancedSettings = {
+        format: S.format, frameSize: S.frameSize, shotType: S.shotType,
+        lensSize: S.lensSize, composition: [...S.composition],
+        lightingDesc: [...S.lightingDesc], lightingType: S.lightingType,
+        timeOfDay: S.timeOfDay, intExt: S.intExt, locationType: S.locationType,
+        set: S.set, timePeriod: S.timePeriod,
+        camera: S.camera, lens: S.lens, filmStock: S.filmStock,
+        colors: [...S.colors],
+      };
+    }
+
+    function copyFinalPrompt() {
+      const val = document.getElementById('finalPrompt').value.trim();
+      if (!val) return;
+      navigator.clipboard.writeText(val).then(() => {
+        const btn = document.getElementById('copyFinalBtn');
+        btn.textContent = '✓ Copied!';
+        btn.style.color = 'var(--green)';
+        setTimeout(() => { btn.textContent = '📋 Copy'; btn.style.color = ''; }, 2000);
+      });
+    }
+
+    function rebuildPrompt() {
+      // Smart update: if we have an enhanced prompt, update only the changed parts
+      // Otherwise, do nothing (user must click Enhance first)
+      if (S.lastEnhancedPrompt) {
+        smartUpdateEnhancedPrompt();
+      }
+    }
+
+    // ══════════════════════════════════════════
+    //  PREVIEW SIZE
+    // ══════════════════════════════════════════
+    function updatePreviewSize() {
+      const area = document.getElementById('previewArea');
+      const canvas = document.getElementById('previewCanvas');
+      const aw = area.clientWidth - 40;
+      const ah = area.clientHeight - 40;
+      const ar = ASPECT_RATIOS[S.aspectRatio];
+      const ratio = ar.w / ar.h;
+      let w, h;
+      if (aw / ratio <= ah) { w = aw; h = w / ratio; }
+      else { h = ah; w = h * ratio; }
+      canvas.style.width = Math.floor(w) + 'px';
+      canvas.style.height = Math.floor(h) + 'px';
+    }
+
+    // ══════════════════════════════════════════
+    //  GENERATE — Google AI Studio (Nano Banana Pro)
+    // ══════════════════════════════════════════
+    const GMODEL = 'gemini-3-pro-image-preview'; // Nano Banana Pro on Google AI Studio
+    const GENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/${GMODEL}:generateContent`;
+
+    async function generateImage() {
+      const apiKey = getApiKey();
+      if (!apiKey) {
+        showError('No API key found. Please paste your Google AI Studio key in the top-right field.');
+        return;
+      }
+
+      let finalPromptVal = document.getElementById('finalPrompt').value.trim();
+      // If no final prompt set, use raw input from scene description
+      if (!finalPromptVal) {
+        finalPromptVal = document.getElementById('mainPrompt').value.trim();
+        if (!finalPromptVal) {
+          showError('Enter a scene description to generate.');
+          return;
+        }
+      }
+      const ar = ASPECT_RATIOS[S.aspectRatio];
+      const loadStat = document.getElementById('loadingStatus');
+
+      hideError();
+      document.getElementById('loadingOverlay').style.display = 'flex';
+      loadStat.textContent = 'Sending to Google AI Studio…';
+      const btn = document.getElementById('genBtn');
+      btn.disabled = true;
+      btn.textContent = '⏳ Generating…';
+
+      const fullPrompt = finalPromptVal;
+
+      // DEBUG: Log the exact prompt being sent
+      console.log('=== PROMPT SENT TO SERVER ===');
+      console.log(fullPrompt);
+      console.log('=============================');
+
+      // Build content parts: text prompt + any reference images
+      const contentParts = [{ text: fullPrompt }];
+      for (const ref of S.refImages) {
+        contentParts.push({ inlineData: { mimeType: ref.mimeType, data: ref.base64 } });
+      }
+
+      const body = {
+        contents: [{ parts: contentParts }],
+        generationConfig: {
+          responseModalities: ['TEXT', 'IMAGE'], // BP-02: must include both TEXT and IMAGE
+          imageConfig: {                          // BP-01: official API fields for AR and size
+            aspectRatio: ar.apiVal,
+            imageSize: S.resTier,
+          },
+        },
+        ...(S.grounding && { tools: [{ google_search: {} }] }), // BP-07: Google Search Grounding
+        ...(S.thinking && { thinkingConfig: { thinkingLevel: 'HIGH', includeThoughts: true } }),
+      };
+
+      // Save for cache
+      S.lastGenPrompt = finalPromptVal;
+      S.lastGenTime = Date.now();
+
+      try {
+        const count = S.variationCount;
+        loadStat.textContent = count > 1
+          ? `Generating ${count} variations with Nano Banana Pro…`
+          : 'Generating with Nano Banana Pro…';
+
+        // Fire request(s)
+        const fetchOne = () => fetch(`${GENDPOINT}?key=${apiKey}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        }).then(async r => {
+          const d = await r.json();
+          if (!r.ok) throw new Error(d.error?.message || `HTTP ${r.status}`);
+          return d;
+        });
+
+        if (count === 1) {
+          // ── Single generation ──
+          const data = await fetchOne();
+          handleSingleResult(data, finalPromptVal, ar);
+        } else {
+          // ── Batch variations with retry ──
+          const variations = [];
+          const maxRetries = 3;
+          let attempts = 0;
+
+          while (variations.length < count && attempts < maxRetries) {
+            const needed = count - variations.length;
+            loadStat.textContent = attempts === 0
+              ? `Generating ${count} variations with Nano Banana Pro…`
+              : `Retrying ${needed} missing variation${needed > 1 ? 's' : ''}…`;
+
+            const promises = Array.from({ length: needed }, () => fetchOne());
+            const results = await Promise.allSettled(promises);
+
+            for (const r of results) {
+              if (r.status !== 'fulfilled') continue;
+              const parts = (r.value.candidates?.[0]?.content?.parts || []).filter(p => !p.thought);
+              const imgPart = parts.find(p => p.inlineData);
+              if (imgPart) {
+                variations.push({
+                  b64: imgPart.inlineData.data,
+                  mime: imgPart.inlineData.mimeType || 'image/png',
+                });
+              }
+            }
+
+            // Track cost for all calls made this round (even failed ones still cost)
+            S.totalSpent += (GEN_PRICE[S.resTier] || 0.134) * needed;
+            updateTotalSpent();
+
+            attempts++;
+            if (variations.length >= count) break;
+          }
+
+          if (variations.length === 0) throw new Error('No images returned from any variation.');
+
+          if (variations.length === 1) {
+            applyResult(variations[0].b64, variations[0].mime, finalPromptVal, ar);
+          } else {
+            showVariationGrid(variations, finalPromptVal, ar);
+            document.getElementById('loadingOverlay').style.display = 'none';
+            resetBtn();
+          }
+        }
+
+      } catch (err) {
+        resetUI();
+        showError('Generation failed: ' + err.message);
+      }
+    }
+
+    function handleSingleResult(data, prompt, ar) {
+      const parts = (data.candidates?.[0]?.content?.parts || []).filter(p => !p.thought);
+      const imgPart = parts.find(p => p.inlineData);
+      if (!imgPart) {
+        const textPart = parts.find(p => p.text);
+        throw new Error(textPart?.text || 'No image returned. The model may have declined the prompt.');
+      }
+      const b64 = imgPart.inlineData.data;
+      const mime = imgPart.inlineData.mimeType || 'image/png';
+      applyResult(b64, mime, prompt, ar);
+      S.totalSpent += GEN_PRICE[S.resTier] || 0.134;
+      updateTotalSpent();
+    }
+
+    function applyResult(b64, mime, prompt, ar) {
+      const binary = atob(b64);
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+      const blob = new Blob([bytes], { type: mime });
+      const url = URL.createObjectURL(blob);
+
+      S.currentUrl = url;
+      S.currentBlob = blob;
+      S.currentMime = mime;
+
+      const dataUrl = `data:${mime};base64,${b64}`;
+      const refDataUrl = S.refImages.length ? S.refImages[0].dataUrl : null;
+      saveToHistory({
+        prompt, timestamp: Date.now(), version: APP_VERSION,
+        aspectRatio: ar.label, resolution: S.resTier, mimeType: mime, dataUrl,
+        refImageDataUrl: refDataUrl,
+      }).catch(e => console.warn('History save failed:', e));
+      ensureOutputFolder().then(() => autoSaveToFolder(blob, prompt));
+
+      document.getElementById('loadingStatus').textContent = 'Done!';
+      displayImage(url);
+
+
+
+      document.getElementById('mAR').textContent = ar.label;
+      document.getElementById('mRes').textContent = S.resTier;
+      document.getElementById('mFmt').textContent = mime.split('/')[1].toUpperCase();
+      document.getElementById('genMeta').style.display = 'block';
+    }
+
+    function showVariationGrid(variations, prompt, ar) {
+      const overlay = document.getElementById('varGridOverlay');
+      const colClass = variations.length <= 2 ? 'cols-2' : variations.length === 3 ? 'cols-3' : 'cols-4';
+      overlay.className = 'var-grid-overlay active ' + colClass;
+
+      // Save ALL variations to history and build items
+      window._variationItems = [];
+      const timestamp = Date.now();
+      const refDataUrl = S.refImages.length ? S.refImages[0].dataUrl : null;
+
+      variations.forEach((v, i) => {
+        const dataUrl = `data:${v.mime};base64,${v.b64}`;
+        const item = {
+          prompt,
+          timestamp: timestamp + i, // slight offset so they sort correctly
+          version: APP_VERSION,
+          aspectRatio: ar.label,
+          resolution: S.resTier,
+          mimeType: v.mime,
+          dataUrl,
+          b64: v.b64,
+          refImageDataUrl: refDataUrl,
+        };
+        window._variationItems.push(item);
+        // Save each to history
+        saveToHistory({
+          prompt, timestamp: item.timestamp, version: APP_VERSION,
+          aspectRatio: ar.label, resolution: S.resTier, mimeType: v.mime, dataUrl,
+          refImageDataUrl: refDataUrl,
+        }).catch(e => console.warn('History save failed:', e));
+        // Auto-save each to output folder
+        const binary = atob(v.b64);
+        const bytes = new Uint8Array(binary.length);
+        for (let j = 0; j < binary.length; j++) bytes[j] = binary.charCodeAt(j);
+        const blob = new Blob([bytes], { type: v.mime });
+        ensureOutputFolder().then(() => autoSaveToFolder(blob, `${prompt} (var ${i + 1})`));
+      });
+
+      overlay.innerHTML = `<button onclick="closeVariationGrid()" style="
+        position:absolute;top:8px;right:8px;z-index:2;background:rgba(0,0,0,.7);
+        border:1px solid var(--border);border-radius:6px;color:var(--text-secondary);
+        font-size:16px;cursor:pointer;padding:2px 8px;font-family:var(--font);">✕</button>`
+        + variations.map((v, i) => {
+        const src = `data:${v.mime};base64,${v.b64}`;
+        return `<div class="var-grid-item" onclick="openVariationDetail(${i})">
+          <img src="${src}" alt="Variation ${i + 1}">
+          <span class="var-pick-label">#${i + 1}</span>
+        </div>`;
+      }).join('');
+    }
+
+    function openVariationDetail(idx) {
+      const item = window._variationItems[idx];
+      if (!item) return;
+      showDetailPanel(item);
+    }
+
+    function closeVariationGrid() {
+      const overlay = document.getElementById('varGridOverlay');
+      overlay.classList.remove('active');
+      overlay.innerHTML = '';
+      window._variationItems = null;
+    }
+
+    function displayImage(url) {
+      const img = document.getElementById('genImg');
+      const ph = document.getElementById('placeholder');
+      const overlay = document.getElementById('loadingOverlay');
+
+      img.onload = () => {
+        ph.style.display = 'none';
+        img.style.display = 'block';
+        overlay.style.display = 'none';
+        resetBtn();
+        updatePreviewSize();
+      };
+      img.onerror = () => {
+        overlay.style.display = 'none';
+        resetBtn();
+        showError('Could not display the returned image.');
+      };
+      img.src = url;
+    }
+
+    // ══════════════════════════════════════════
+    //  FULLSCREEN VIEWER + ZOOM & PAN
+    // ══════════════════════════════════════════
+    let fsZoom = 1, fsPanX = 0, fsPanY = 0, fsDragging = false, fsLastX = 0, fsLastY = 0;
+
+    function openFullscreen(customSrc) {
+      const src = customSrc || document.getElementById('genImg').src;
+      if (!src) return;
+      const overlay = document.getElementById('fullscreenOverlay');
+      const img = document.getElementById('fullscreenImg');
+      img.src = src;
+      fsZoom = 1; fsPanX = 0; fsPanY = 0;
+      updateFsTransform();
+      overlay.classList.add('active');
+    }
+
+    function closeFullscreen() {
+      document.getElementById('fullscreenOverlay').classList.remove('active');
+    }
+
+    function updateFsTransform() {
+      const img = document.getElementById('fullscreenImg');
+      img.style.transform = `translate(${fsPanX}px, ${fsPanY}px) scale(${fsZoom})`;
+    }
+
+    // Scroll to zoom
+    document.getElementById('fullscreenOverlay').addEventListener('wheel', (e) => {
+      e.preventDefault();
+      const delta = e.deltaY > 0 ? -0.15 : 0.15;
+      fsZoom = Math.min(Math.max(fsZoom + delta * fsZoom, 0.1), 20);
+      updateFsTransform();
+    }, { passive: false });
+
+    // Drag to pan
+    let fsMoved = false;
+    document.getElementById('fullscreenOverlay').addEventListener('mousedown', (e) => {
+      if (e.target.tagName === 'BUTTON') return;
+      fsDragging = true;
+      fsMoved = false;
+      fsLastX = e.clientX;
+      fsLastY = e.clientY;
+      document.getElementById('fullscreenOverlay').classList.add('dragging');
+    });
+    document.addEventListener('mousemove', (e) => {
+      if (!fsDragging) return;
+      const dx = e.clientX - fsLastX;
+      const dy = e.clientY - fsLastY;
+      if (Math.abs(dx) > 3 || Math.abs(dy) > 3) fsMoved = true;
+      fsPanX += dx;
+      fsPanY += dy;
+      fsLastX = e.clientX;
+      fsLastY = e.clientY;
+      updateFsTransform();
+    });
+    document.addEventListener('mouseup', (e) => {
+      const wasDragging = fsDragging;
+      fsDragging = false;
+      document.getElementById('fullscreenOverlay')?.classList.remove('dragging');
+      // Close on click on black background (not a drag, not the image or a button)
+      if (wasDragging && !fsMoved && e.target === document.getElementById('fullscreenOverlay')) {
+        closeDetailPanel();
+        closeFullscreen();
+      }
+    });
+
+    // ══════════════════════════════════════════
+    //  CAMERA CONTROL — Functions
+    // ══════════════════════════════════════════
+
+    /* ── Render all CC UI sections ── */
+    function ccRenderAll() {
+      ccRenderEquipmentBar();
+      ccRenderCameraGrid();
+      ccRenderLensGrid();
+      ccRenderAspectGrid();
+      ccRenderResTiers();
+      ccRenderVarPills();
+      ccUpdateGenPrice();
+      // Must run after DOM visible so clientWidth/Height are non-zero
+      requestAnimationFrame(() => ccUpdatePreviewSize());
+    }
+
+    /* ── Equipment bar slots ── */
+    function ccRenderEquipmentBar() {
+      const cam = CC_CAMERAS[S.ccCamera];
+      document.getElementById('ccSlotCameraName').textContent = cam.name;
+      document.getElementById('ccSlotCameraType').textContent = cam.type;
+      const lens = CC_LENSES[S.ccLens];
+      document.getElementById('ccSlotLensName').textContent = lens.name;
+      document.getElementById('ccSlotLensType').textContent = lens.type;
+      const fmm = CC_FOCAL_STEPS[S.ccFocal];
+      document.getElementById('ccSlotFocalVal').textContent = fmm;
+      document.getElementById('ccFocalSlider').value = S.ccFocal;
+      document.getElementById('ccFocalDisplay').textContent = fmm;
+      document.getElementById('ccFocalDesc').textContent = ccFocalDesc(fmm);
+      const fstop = CC_APERTURE_STEPS[S.ccAperture];
+      document.getElementById('ccSlotApertureVal').textContent = 'f/' + fstop;
+      document.getElementById('ccApertureSlider').value = S.ccAperture;
+      document.getElementById('ccApertureDisplay').textContent = 'f/' + fstop;
+      document.getElementById('ccApertureDesc').textContent = ccApertureDesc(fstop);
+      // Iris visual — smaller inner = wider aperture
+      const pct = 6 + (S.ccAperture / (CC_APERTURE_STEPS.length - 1)) * 22;
+      document.getElementById('ccIrisInner').style.width = pct + 'px';
+      document.getElementById('ccIrisInner').style.height = pct + 'px';
+    }
+
+    function ccFocalDesc(mm) {
+      if (mm <= 10) return 'Ultra-wide — extreme distortion, immersive';
+      if (mm <= 16) return 'Wide — environmental, spacious';
+      if (mm <= 24) return 'Moderate wide — versatile, slight expansion';
+      if (mm <= 35) return 'Standard — natural perspective';
+      if (mm <= 45) return 'Short tele — slight compression, flattering';
+      return 'Normal tele — compressed, isolated subject';
+    }
+
+    function ccApertureDesc(f) {
+      if (f <= 1.4) return 'Wide open — extremely shallow depth of field';
+      if (f <= 2)   return 'Very wide — dreamy background separation';
+      if (f <= 2.8) return 'Moderate — balanced background separation';
+      if (f <= 4)   return 'Standard — good sharpness, gentle bokeh';
+      if (f <= 5.6) return 'Moderate depth — landscape/group friendly';
+      if (f <= 8)   return 'Sharp — deep focus, architectural clarity';
+      if (f <= 11)  return 'Deep — most of the scene in focus';
+      return 'Maximum depth — everything sharp, diffraction zone';
+    }
+
+    /* ── Picker toggle ── */
+    function ccTogglePicker(slot) {
+      const was = S.ccOpenPicker;
+      // close all pickers
+      ['camera', 'lens', 'focal', 'aperture'].forEach(s => {
+        document.getElementById('ccPicker' + s.charAt(0).toUpperCase() + s.slice(1)).style.display = 'none';
+        document.getElementById('ccSlot' + s.charAt(0).toUpperCase() + s.slice(1)).classList.remove('active');
+      });
+      if (was === slot) { S.ccOpenPicker = null; return; }
+      S.ccOpenPicker = slot;
+      document.getElementById('ccPicker' + slot.charAt(0).toUpperCase() + slot.slice(1)).style.display = 'block';
+      document.getElementById('ccSlot' + slot.charAt(0).toUpperCase() + slot.slice(1)).classList.add('active');
+    }
+
+    /* ── Camera grid ── */
+    function ccRenderCameraGrid() {
+      const grid = document.getElementById('ccCameraGrid');
+      grid.innerHTML = CC_CAMERAS.map((c, i) => `
+        <div class="camera-card${i === S.ccCamera ? ' active' : ''}" onclick="ccSelectCamera(${i})">
+          <div class="cam-brand">${c.type}</div>
+          <div class="cam-name">${c.name}</div>
+          <div class="cam-spec">${c.spec}</div>
+        </div>
+      `).join('');
+    }
+
+    function ccSelectCamera(i) {
+      S.ccCamera = i;
+      ccRenderCameraGrid();
+      ccRenderEquipmentBar();
+      ccTogglePicker('camera'); // close picker
+    }
+
+    /* ── Lens grid ── */
+    function ccRenderLensGrid() {
+      const grid = document.getElementById('ccLensGrid');
+      const filtered = S.ccLensFilter === 'ALL'
+        ? CC_LENSES
+        : CC_LENSES.filter(l => l.type === S.ccLensFilter);
+      grid.innerHTML = filtered.map(l => {
+        const realIdx = CC_LENSES.indexOf(l);
+        return `
+          <div class="lens-card${realIdx === S.ccLens ? ' active' : ''}" onclick="ccSelectLens(${realIdx})">
+            <div class="lens-brand">${l.type}</div>
+            <div class="lens-name">${l.name}</div>
+          </div>
+        `;
+      }).join('');
+      // update tab active states
+      document.querySelectorAll('.cc-lens-tab').forEach(t => {
+        t.classList.toggle('active', t.dataset.type === S.ccLensFilter);
+      });
+    }
+
+    function ccFilterLensType(type) {
+      S.ccLensFilter = type;
+      ccRenderLensGrid();
+    }
+
+    function ccSelectLens(i) {
+      S.ccLens = i;
+      ccRenderLensGrid();
+      ccRenderEquipmentBar();
+      ccTogglePicker('lens'); // close picker
+    }
+
+    /* ── Focal length slider ── */
+    function ccSetFocalLength(idx) {
+      S.ccFocal = parseInt(idx);
+      ccRenderEquipmentBar();
+    }
+
+    /* ── Aperture slider ── */
+    function ccSetAperture(idx) {
+      S.ccAperture = parseInt(idx);
+      ccRenderEquipmentBar();
+    }
+
+    /* ── Aspect ratio grid ── */
+    function ccRenderAspectGrid() {
+      const grid = document.getElementById('ccAspectGrid');
+      grid.innerHTML = ASPECT_RATIOS.map((a, i) => `
+        <button class="aspect-btn${i === S.ccAspectRatio ? ' active' : ''}" onclick="ccSetAspect(${i})">
+          <span>${a.label}</span><small>${a.name}</small>
+        </button>
+      `).join('');
+    }
+
+    function ccSetAspect(i) {
+      S.ccAspectRatio = i;
+      ccRenderAspectGrid();
+      ccUpdatePreviewSize();
+    }
+
+    /* ── Resolution tiers ── */
+    function ccRenderResTiers() {
+      const grp = document.getElementById('ccResTierGroup');
+      grp.innerHTML = RES_TIERS.map(r => `
+        <button class="res-tier-btn${r.apiVal === S.ccResTier ? ' active' : ''}" onclick="ccSetResTier('${r.apiVal}')">
+          ${r.label}<small>${r.sub}</small>
+        </button>
+      `).join('');
+    }
+
+    function ccSetResTier(val) {
+      S.ccResTier = val;
+      ccRenderResTiers();
+      ccUpdateGenPrice();
+    }
+
+    /* ── Variation pills ── */
+    function ccRenderVarPills() {
+      const container = document.getElementById('ccVarPills');
+      container.innerHTML = '<span class="var-label">Variations:</span>' + [1, 2, 3, 4].map(n => `
+        <button class="var-pill${n === S.ccVariationCount ? ' active' : ''}" onclick="ccSetVariations(${n})">${n}</button>
+      `).join('');
+    }
+
+    function ccSetVariations(n) {
+      S.ccVariationCount = n;
+      ccRenderVarPills();
+      ccUpdateGenPrice();
+    }
+
+    /* ── Price display ── */
+    function ccUpdateGenPrice() {
+      const price = (GEN_PRICE[S.ccResTier] || 0.134) * S.ccVariationCount;
+      document.getElementById('ccGenPrice').textContent = '$' + price.toFixed(3);
+    }
+
+    /* ── Preview size ── */
+    function ccUpdatePreviewSize() {
+      const area = document.getElementById('ccPreviewArea');
+      const canvas = document.getElementById('ccPreviewCanvas');
+      const aw = area.clientWidth - 40;
+      const ah = area.clientHeight - 40;
+      const ar = ASPECT_RATIOS[S.ccAspectRatio];
+      const ratio = ar.w / ar.h;
+      let w, h;
+      if (aw / ratio <= ah) { w = aw; h = w / ratio; }
+      else { h = ah; w = h * ratio; }
+      canvas.style.width = Math.floor(w) + 'px';
+      canvas.style.height = Math.floor(h) + 'px';
+    }
+
+    /* ── Build camera prompt (hidden injection) ── */
+    function ccBuildCameraPrompt() {
+      const cam = CC_CAMERAS[S.ccCamera];
+      const lens = CC_LENSES[S.ccLens];
+      const fmm = CC_FOCAL_STEPS[S.ccFocal];
+      const fstop = CC_APERTURE_STEPS[S.ccAperture];
+
+      let lines = [];
+      // Camera — sensor look
+      lines.push(cam.desc);
+      // Lens — visual fingerprint
+      lines.push(lens.desc);
+      // Focal length
+      let focalNote = '';
+      if (fmm <= 10)      focalNote = 'Ultra-wide, barrel distortion, exaggerated depth.';
+      else if (fmm <= 16) focalNote = 'Wide-angle, expansive environment, stretched edges.';
+      else if (fmm <= 24) focalNote = 'Moderate wide, slight spatial expansion, straight verticals.';
+      else if (fmm <= 35) focalNote = 'Natural perspective, no distortion, true-to-life proportions.';
+      else if (fmm <= 45) focalNote = 'Slight telephoto compression, flattering for faces.';
+      else                 focalNote = 'Telephoto compression, background looms close, subject isolated.';
+      lines.push(`${fmm}mm focal length. ${focalNote}`);
+      // Aperture
+      let apNote = '';
+      if (fstop <= 1.4)     apNote = 'Paper-thin focus, background dissolves into large bokeh circles.';
+      else if (fstop <= 2)   apNote = 'Very shallow focus, soft dreamy background, visible bokeh.';
+      else if (fstop <= 2.8) apNote = 'Moderate depth, subject sharp, background softly blurred.';
+      else if (fstop <= 4)   apNote = 'Standard depth, background gently softened but readable.';
+      else if (fstop <= 5.6) apNote = 'Broad depth, most of scene sharp, gentle far-distance softening.';
+      else if (fstop <= 8)   apNote = 'Deep focus, sharp foreground to background.';
+      else if (fstop <= 11)  apNote = 'Very deep focus, everything crisp across entire frame.';
+      else                    apNote = 'Maximum depth, tack-sharp from inches to infinity.';
+      lines.push(`f/${fstop} aperture. ${apNote}`);
+
+      return lines.join('\n');
+    }
+
+    /* ── Generate image (Camera Control) ── */
+    async function ccGenerateImage() {
+      const scenePrompt = document.getElementById('ccPromptInput').value.trim();
+      if (!scenePrompt) { ccShowError('Enter a scene description.'); return; }
+      const apiKey = getApiKey();
+      if (!apiKey) { ccShowError('No API key found. Paste your Google AI Studio key in the top-right field.'); return; }
+
+      const btn = document.getElementById('ccGenBtn');
+      btn.disabled = true;
+      btn.innerHTML = '&#x23F3; Generating…';
+      document.getElementById('ccLoadingOverlay').style.display = 'flex';
+      document.getElementById('ccLoadingStatus').textContent = 'Generating with Nano Banana Pro…';
+      document.getElementById('ccErrorMsg').style.display = 'none';
+
+      // Build full prompt: camera settings (hidden) + scene (visible)
+      const cameraBlock = ccBuildCameraPrompt();
+      const fullPrompt = cameraBlock + '\n\n' + scenePrompt;
+
+      // DEBUG: Log the exact prompt being sent
+      console.log('=== CC PROMPT SENT TO SERVER ===');
+      console.log(fullPrompt);
+      console.log('================================');
+
+      const ar = ASPECT_RATIOS[S.ccAspectRatio];
+      const count = S.ccVariationCount;
+      const totalCost = (GEN_PRICE[S.ccResTier] || 0.134) * count;
+
+      const body = {
+        contents: [{ parts: [{ text: fullPrompt }] }],
+        generationConfig: {
+          responseModalities: ['TEXT', 'IMAGE'],
+          imageConfig: {
+            aspectRatio: ar.apiVal,
+            imageSize: S.ccResTier,
+          },
+        },
+      };
+
+      const fetchOne = () => fetch(`${GENDPOINT}?key=${apiKey}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      }).then(async r => {
+        const d = await r.json();
+        if (!r.ok) throw new Error(d.error?.message || `HTTP ${r.status}`);
+        return d;
+      });
+
+      try {
+        const loadStat = document.getElementById('ccLoadingStatus');
+        loadStat.textContent = count > 1
+          ? `Generating ${count} variations with Nano Banana Pro…`
+          : 'Generating with Nano Banana Pro…';
+
+        // ── Batch with retry (exact same pattern as Prompt Agent) ──
+        const variations = [];
+        const maxRetries = 3;
+        let attempts = 0;
+
+        while (variations.length < count && attempts < maxRetries) {
+          const needed = count - variations.length;
+          if (attempts > 0) {
+            loadStat.textContent = `Retrying ${needed} missing variation${needed > 1 ? 's' : ''}…`;
+          }
+
+          const promises = Array.from({ length: needed }, () => fetchOne());
+          const results = await Promise.allSettled(promises);
+
+          for (const r of results) {
+            if (r.status !== 'fulfilled') continue;
+            const parts = (r.value.candidates?.[0]?.content?.parts || []).filter(p => !p.thought);
+            const imgPart = parts.find(p => p.inlineData);
+            if (imgPart) {
+              variations.push({
+                b64: imgPart.inlineData.data,
+                mime: imgPart.inlineData.mimeType || 'image/png',
+              });
+            }
+          }
+
+          S.totalSpent += (GEN_PRICE[S.ccResTier] || 0.134) * needed;
+          updateTotalSpent();
+          attempts++;
+        }
+
+        if (variations.length === 0) throw new Error('No images returned. The model may have declined the prompt.');
+
+        // ── Save all to history + output folder ──
+        const batchId = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+        for (let vi = 0; vi < variations.length; vi++) {
+          const { b64, mime } = variations[vi];
+          const dataUrl = `data:${mime};base64,${b64}`;
+          await saveToHistory({
+            prompt: scenePrompt,
+            timestamp: Date.now() + vi,
+            version: APP_VERSION,
+            aspectRatio: ar.label,
+            resolution: S.ccResTier,
+            mimeType: mime,
+            dataUrl,
+            source: 'camera-control',
+            batchId,
+            variationIndex: vi,
+            variationTotal: variations.length,
+            camera: CC_CAMERAS[S.ccCamera].name,
+            lens: CC_LENSES[S.ccLens].name,
+            focalLength: CC_FOCAL_STEPS[S.ccFocal] + 'mm',
+            aperture: 'f/' + CC_APERTURE_STEPS[S.ccAperture],
+          });
+          const binary = atob(b64);
+          const bytes = new Uint8Array(binary.length);
+          for (let j = 0; j < binary.length; j++) bytes[j] = binary.charCodeAt(j);
+          const blob = new Blob([bytes], { type: mime });
+          ensureOutputFolder().then(() => autoSaveToFolder(blob, scenePrompt + (variations.length > 1 ? ` (var ${vi + 1})` : '')));
+        }
+
+        // ── Display results ──
+        if (variations.length === 1) {
+          ccDisplayImage(variations[0].b64, variations[0].mime);
+        } else {
+          // Hide single image, show variation grid
+          document.getElementById('ccGenImg').style.display = 'none';
+          document.getElementById('ccVarGridOverlay').className = 'var-grid-overlay';
+          ccShowVariationGrid(variations, scenePrompt, ar);
+          document.getElementById('ccLoadingOverlay').style.display = 'none';
+          ccResetBtn();
+        }
+
+      } catch (err) {
+        ccShowError(err.message);
+        document.getElementById('ccLoadingOverlay').style.display = 'none';
+        ccResetBtn();
+      }
+    }
+
+    /* Show single image in CC preview (mirrors Prompt Agent's displayImage) */
+    function ccDisplayImage(b64, mime) {
+      const img = document.getElementById('ccGenImg');
+      const ph  = document.getElementById('ccPlaceholder');
+      const overlay = document.getElementById('ccLoadingOverlay');
+      const varGrid = document.getElementById('ccVarGridOverlay');
+
+      // Use object URL like Prompt Agent does
+      const binary = atob(b64);
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+      const blob = new Blob([bytes], { type: mime });
+      const url = URL.createObjectURL(blob);
+
+      img.onload = () => {
+        ph.style.display = 'none';
+        img.style.display = 'block';
+        overlay.style.display = 'none';
+        varGrid.className = 'var-grid-overlay'; // hide grid
+        ccUpdatePreviewSize();
+        ccResetBtn();
+      };
+      img.onerror = () => {
+        overlay.style.display = 'none';
+        ccShowError('Failed to display the generated image.');
+        ccResetBtn();
+      };
+      img.src = url;
+    }
+
+    function ccResetBtn() {
+      const btn = document.getElementById('ccGenBtn');
+      btn.disabled = false;
+      const price = '$' + ((GEN_PRICE[S.ccResTier] || 0.134) * S.ccVariationCount).toFixed(3);
+      btn.innerHTML = `&#x2726; Generate &middot; <span id="ccGenPrice">${price}</span>`;
+    }
+
+    function ccShowError(msg) {
+      const el = document.getElementById('ccErrorMsg');
+      el.textContent = msg;
+      el.style.display = 'block';
+    }
+
+    function ccDownloadImg() {
+      const img = document.getElementById('ccGenImg');
+      if (!img.src || img.style.display === 'none') return;
+      const a = document.createElement('a');
+      a.href = img.src;
+      a.download = `camera-control-${Date.now()}.png`;
+      a.click();
+    }
+
+    function ccFullscreen() {
+      const img = document.getElementById('ccGenImg');
+      if (!img.src || img.style.display === 'none') return;
+      openFullscreen(img.src);
+    }
+
+    /* ── CC Variation Grid ── */
+    function ccShowVariationGrid(variations, prompt, ar) {
+      document.getElementById('ccPlaceholder').style.display = 'none';
+      const overlay = document.getElementById('ccVarGridOverlay');
+      const colClass = variations.length <= 2 ? 'cols-2' : variations.length === 3 ? 'cols-3' : 'cols-4';
+      overlay.className = 'var-grid-overlay active ' + colClass;
+
+      window._ccVariationItems = variations.map((v, i) => ({
+        prompt,
+        timestamp: Date.now() + i,
+        version: APP_VERSION,
+        aspectRatio: ar.label,
+        resolution: S.ccResTier,
+        mimeType: v.mime,
+        dataUrl: `data:${v.mime};base64,${v.b64}`,
+        source: 'camera-control',
+        camera: CC_CAMERAS[S.ccCamera].name,
+        lens: CC_LENSES[S.ccLens].name,
+        focalLength: CC_FOCAL_STEPS[S.ccFocal] + 'mm',
+        aperture: 'f/' + CC_APERTURE_STEPS[S.ccAperture],
+      }));
+
+      overlay.innerHTML = `<button onclick="ccCloseVariationGrid()" style="
+        position:absolute;top:8px;right:8px;z-index:2;background:rgba(0,0,0,.7);
+        border:1px solid var(--border);border-radius:6px;color:var(--text-secondary);
+        font-size:16px;cursor:pointer;padding:2px 8px;font-family:var(--font);">✕</button>`
+        + variations.map((v, i) => {
+        const src = `data:${v.mime};base64,${v.b64}`;
+        return `<div class="var-grid-item" onclick="ccOpenVariationDetail(${i})">
+          <img src="${src}" alt="Variation ${i + 1}">
+          <span class="var-pick-label">#${i + 1}</span>
+        </div>`;
+      }).join('');
+    }
+
+    function ccOpenVariationDetail(idx) {
+      const item = window._ccVariationItems?.[idx];
+      if (!item) return;
+      showDetailPanel(item);
+    }
+
+    function ccCloseVariationGrid() {
+      document.getElementById('ccVarGridOverlay').className = 'var-grid-overlay';
+    }
+
+    /* ── ShotDeck: upload image → CINEFRAME-OMEGA extract → fill prompt ── */
+    function ccShotDeck() {
+      document.getElementById('ccShotDeckFile').click();
+    }
+
+    function ccShotDeckFilePicked(e) {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = async () => {
+        const dataUrl = reader.result;
+        const base64 = dataUrl.split(',')[1];
+        const mimeType = file.type || 'image/png';
+        await ccRunShotDeckExtract(base64, mimeType);
+      };
+      reader.readAsDataURL(file);
+      e.target.value = ''; // reset so same file can be picked again
+    }
+
+    async function ccRunShotDeckExtract(base64, mimeType) {
+      const apiKey = getApiKey();
+      if (!apiKey) { ccShowError('No API key found. Paste your Google AI Studio key first.'); return; }
+
+      const btn = document.getElementById('ccShotDeckBtn');
+      btn.disabled = true;
+      btn.textContent = '⏳ Extracting…';
+      document.getElementById('ccErrorMsg').style.display = 'none';
+
+      try {
+        const systemPrompt = await loadCineframePrompt();
+
+        const body = {
+          contents: [{
+            parts: [
+              { inlineData: { mimeType, data: base64 } },
+              { text: 'Extract' },
+            ]
+          }],
+          systemInstruction: { parts: [{ text: systemPrompt }] },
+          generationConfig: { temperature: 0.2, maxOutputTokens: 4000, responseMimeType: 'application/json' },
+        };
+
+        const resp = await fetch(
+          'https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent',
+          { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey }, body: JSON.stringify(body) }
+        );
+        const data = await resp.json();
+        if (!resp.ok) throw new Error(data.error?.message || `HTTP ${resp.status}`);
+
+        let text = data.candidates?.[0]?.content?.parts?.filter(p => p.text && !p.thought).map(p => p.text).join('').trim() || '';
+        if (!text) throw new Error('No response from extraction.');
+
+        text = text.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/i, '').trim();
+        const jsonMatch = text.match(/\{[\s\S]*\}/);
+        if (!jsonMatch) throw new Error('No JSON found in response.');
+
+        const omega = JSON.parse(jsonMatch[0]);
+        const prompt = ccFlattenOmega(omega);
+        document.getElementById('ccPromptInput').value = prompt;
+        S.ccPrompt = prompt;
+
+        S.totalSpent += EXTRACT_PRICE;
+        updateTotalSpent();
+      } catch (err) {
+        ccShowError('ShotDeck extraction failed: ' + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '&#x1F3AC; ShotDeck &middot; Extract Scene';
+      }
+    }
+
+    function ccFlattenOmega(o) {
+      const lines = [];
+      if (o.tags?.length) lines.push('Tags: ' + o.tags.join(', '));
+      if (o.genre?.length) lines.push('Genre: ' + o.genre.join(', '));
+      if (o.time_period) lines.push('Time Period: ' + o.time_period);
+      if (o.cinematography) {
+        const c = o.cinematography;
+        if (c.frame_size) lines.push('Frame Size: ' + c.frame_size);
+        if (c.shot_type) lines.push('Shot Type: ' + c.shot_type);
+        if (c.lens_size) lines.push('Lens Size: ' + c.lens_size);
+        if (c.composition?.length) lines.push('Composition: ' + c.composition.join(', '));
+      }
+      if (o.lighting) {
+        if (o.lighting.description?.length) lines.push('Lighting: ' + o.lighting.description.join(', '));
+        if (o.lighting.type) lines.push('Lighting Type: ' + o.lighting.type);
+      }
+      if (o.time_of_day) lines.push('Time of Day: ' + o.time_of_day);
+      if (o.interior_exterior) lines.push('Interior/Exterior: ' + o.interior_exterior);
+      if (o.location_type) lines.push('Location Type: ' + o.location_type);
+      if (o.set) lines.push('Set: ' + o.set);
+      if (o.story_location) lines.push('Story Location: ' + o.story_location);
+      if (o.visuals?.color?.length) lines.push('Color: ' + o.visuals.color.join(', '));
+      if (o.equipment) {
+        if (o.equipment.camera?.length) lines.push('Camera: ' + o.equipment.camera.join(', '));
+        if (o.equipment.lens?.length) lines.push('Lens: ' + o.equipment.lens.join(', '));
+        if (o.equipment.film_stock?.length) lines.push('Film Stock: ' + o.equipment.film_stock.join(', '));
+      }
+      if (o.actors?.length) lines.push('Actors: ' + o.actors.join(', '));
+      return lines.join('\n');
+    }
+
+    /* ── Update total spent across both tabs ── */
+    function updateTotalSpent() {
+      const txt = '$' + S.totalSpent.toFixed(3);
+      document.getElementById('totalSpent').textContent = txt;
+      const ccEl = document.getElementById('ccTotalSpent');
+      if (ccEl) ccEl.textContent = txt;
+    }
+
+    // ══════════════════════════════════════════
+    //  KEYBOARD SHORTCUTS
+    // ══════════════════════════════════════════
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        if (document.getElementById('detailPanel').classList.contains('open')) { closeDetailPanel(); return; }
+        if (document.getElementById('fullscreenOverlay').classList.contains('active')) closeFullscreen();
+        return;
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        e.preventDefault();
+        // Context-aware: generate on whichever tab is active
+        if (document.getElementById('cameraView').style.display !== 'none') {
+          if (!document.getElementById('ccGenBtn').disabled) ccGenerateImage();
+        } else {
+          if (!document.getElementById('genBtn').disabled) generateImage();
+        }
+        return;
+      }
+      if ((e.ctrlKey || e.metaKey) && (e.key === 'e' || e.key === 'E')) {
+        e.preventDefault();
+        if (!document.getElementById('enhanceBtn').disabled) enhancePrompt();
+        return;
+      }
+    });
+
+    // Double-click to reset zoom
+    document.getElementById('fullscreenOverlay').addEventListener('dblclick', (e) => {
+      if (e.target.tagName === 'BUTTON') return;
+      fsZoom = 1; fsPanX = 0; fsPanY = 0;
+      updateFsTransform();
+    });
+
+    function resetUI() {
+      document.getElementById('loadingOverlay').style.display = 'none';
+      resetBtn();
+    }
+    function resetBtn() {
+      const btn = document.getElementById('genBtn');
+      btn.disabled = false;
+      const unitPrice = GEN_PRICE[S.resTier] || 0.134;
+      const price = '$' + (unitPrice * S.variationCount).toFixed(3);
+      btn.innerHTML = `✦ Generate Image · <span id="genPrice">${price}</span>`;
+    }
+    function showError(msg) {
+      const e = document.getElementById('errorMsg');
+      e.textContent = msg;
+      e.style.display = 'block';
+    }
+    function hideError() {
+      document.getElementById('errorMsg').style.display = 'none';
+    }
+
+    function downloadImg() {
+      if (!S.currentBlob) return;
+      const ext = (S.currentMime || 'image/png').split('/')[1] || 'png';
+      const a = document.createElement('a');
+      a.href = S.currentUrl;
+      a.download = `nano-banana-pro-${Date.now()}.${ext}`;
+      a.click();
+    }
+    function copyImgUrl() {
+      // Blob URLs are local — copy the generation prompt instead as a useful share
+      if (!S.currentUrl) return;
+      navigator.clipboard.writeText(buildPrompt())
+        .then(() => alert('Prompt copied to clipboard (blob URLs are local-only).'));
+    }
+
+    // ══════════════════════════════════════════
+    //  UTILITIES
+    // ══════════════════════════════════════════
+    function copyPrompt() {
+      navigator.clipboard.writeText(buildPrompt()).then(() => {
+        const btn = document.getElementById('copyBtn');
+        btn.textContent = '✓ Copied!';
+        btn.classList.add('copy-ok');
+        setTimeout(() => { btn.textContent = '📋 Copy'; btn.classList.remove('copy-ok'); }, 2000);
+      });
+    }
+    function expandPrompt() {
+      document.getElementById('modalText').textContent = buildPrompt();
+      document.getElementById('modal').classList.add('open');
+    }
+    function closeModal() {
+      document.getElementById('modal').classList.remove('open');
+    }
+
+    // ══════════════════════════════════════════
+    //  SCENE EXTRACTOR — CINEFRAME-OMEGA
+    // ══════════════════════════════════════════
+    let cineframePrompt = null; // loaded on first use
+
+    async function loadCineframePrompt() {
+      if (cineframePrompt) return cineframePrompt;
+      try {
+        const resp = await fetch('engines/CINEFRAME-OMEGA.json');
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        const data = await resp.json();
+        cineframePrompt = data.system_prompt;
+        return cineframePrompt;
+      } catch (e) {
+        throw new Error('Could not load engines/CINEFRAME-OMEGA.json — make sure it exists in the engines/ folder.');
+      }
+    }
+
+    async function extractScene() {
+      // Need at least one reference image
+      if (!S.refImages.length) {
+        document.getElementById('refFileInput').click();
+        return;
+      }
+      const apiKey = getApiKey();
+      if (!apiKey) {
+        showError('No API key found. Please paste your Google AI Studio key in the top-right field.');
+        return;
+      }
+
+      const btn = document.getElementById('extractSceneBtn');
+      btn.disabled = true;
+      btn.textContent = '⏳ Extracting…';
+      hideError();
+
+      try {
+        const systemPrompt = await loadCineframePrompt();
+
+        // Use first ref image
+        const ref = S.refImages[0];
+        const body = {
+          contents: [{
+            parts: [
+              { inlineData: { mimeType: ref.mimeType, data: ref.base64 } },
+              { text: 'Extract' },
+            ]
+          }],
+          systemInstruction: { parts: [{ text: systemPrompt }] },
+          generationConfig: { temperature: 0.2, maxOutputTokens: 4000, responseMimeType: 'application/json' },
+        };
+
+        const resp = await fetch(
+          'https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent',
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
+            body: JSON.stringify(body),
+          }
+        );
+        const data = await resp.json();
+        if (!resp.ok) throw new Error(data.error?.message || `HTTP ${resp.status}`);
+
+        let text = data.candidates?.[0]?.content?.parts?.filter(p => p.text && !p.thought).map(p => p.text).join('').trim() || '';
+        if (!text) throw new Error('No response from Gemini.');
+
+        // Extract JSON object — strip code fences, preamble, trailing text
+        text = text.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/i, '').trim();
+        const jsonMatch = text.match(/\{[\s\S]*\}/);
+        if (!jsonMatch) throw new Error('No JSON object found in response.');
+
+        const omega = JSON.parse(jsonMatch[0]);
+        applyExtractedScene(omega);
+
+        // Step 2: Generate a scene description prompt from the image + extracted JSON
+        btn.textContent = '⏳ Writing prompt…';
+
+        let refinerInstructions;
+        try {
+          const mdResp = await fetch('prompt_refiner.md');
+          if (!mdResp.ok) throw new Error(`HTTP ${mdResp.status}`);
+          refinerInstructions = await mdResp.text();
+        } catch (e) {
+          refinerInstructions = '';
+        }
+
+        const scenePromptSystem = `${refinerInstructions}
+
+You are looking at a cinematic reference image. A metadata extraction engine has already analyzed it and produced the following structured data:
+
+${JSON.stringify(omega, null, 2)}
+
+Your task: Write a vivid, natural-language scene description prompt that would recreate this exact scene if fed to an image generation model.
+
+Rules:
+- Describe what you SEE in the image: the subject, their appearance, posture, expression, action, clothing, and surroundings.
+- Weave in the extracted technical metadata naturally — the lighting, color tone, composition, lens, camera angle — as descriptive language, not as a list.
+- Follow the best practices: strong subject & action first, show don't tell, precise lighting, real camera terms, no fluff words (no "masterful", "professional", "ultra-high quality", "8k").
+- Write one flowing paragraph. No headings, no bullet points, no labels.
+- Do NOT mention the extraction, the JSON, the metadata, or the reference image. The output should read as a standalone image generation prompt.
+- Be specific about physical details you observe: materials, textures, colors, spatial relationships, depth.`;
+
+        const promptBody = {
+          contents: [{
+            parts: [
+              { inlineData: { mimeType: ref.mimeType, data: ref.base64 } },
+              { text: 'Describe this scene as an image generation prompt.' },
+            ]
+          }],
+          systemInstruction: { parts: [{ text: scenePromptSystem }] },
+          generationConfig: { temperature: 0.7, maxOutputTokens: 1500 },
+        };
+
+        const promptResp = await fetch(
+          'https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent',
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
+            body: JSON.stringify(promptBody),
+          }
+        );
+        const promptData = await promptResp.json();
+        if (promptResp.ok) {
+          const sceneDesc = promptData.candidates?.[0]?.content?.parts?.filter(p => p.text && !p.thought).map(p => p.text).join('').trim() || '';
+          if (sceneDesc) {
+            document.getElementById('mainPrompt').value = sceneDesc;
+          }
+          S.totalSpent += ENHANCE_PRICE;
+        }
+
+        // Clear reference images so they don't get sent to generation
+        S.refImages.length = 0;
+        renderRefThumbs();
+
+        S.totalSpent += EXTRACT_PRICE;
+        updateTotalSpent();
+      } catch (err) {
+        showError('Scene extraction failed: ' + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '✦ Extract Scene from Reference';
+      }
+    }
+
+    function resetAllSettings() {
+      // Reset all CINEFRAME settings to defaults
+      S.format = 'Film - 35mm'; S.enableFormat = false;
+      S.frameSize = 'Medium'; S.enableFrameSize = false;
+      S.shotType = 'Clean Single'; S.enableShotType = false;
+      S.lensSize = 'Normal'; S.enableLensSize = false;
+      S.composition = []; S.enableComposition = false;
+      S.lightingDesc = []; S.enableLightingDesc = false;
+      S.lightingType = 'Natural Light'; S.enableLightingType = false;
+      S.timeOfDay = 'Golden Hour'; S.enableTimeOfDay = false;
+      S.intExt = 'Exterior'; S.enableIntExt = false;
+      S.locationType = 'Urban'; S.enableLocationType = false;
+      S.set = ''; S.enableSet = false;
+      S.timePeriod = 'Contemporary'; S.enableTimePeriod = false;
+      S.camera = 'ARRI Alexa 35'; S.enableCamera = false;
+      S.lens = 'ARRI Signature Prime'; S.enableLens = false;
+      S.filmStock = 'Kodak Vision3 500T 5219'; S.enableFilmStock = false;
+      S.colors = []; S.enableColors = false;
+      S.paletteHex = []; S.enablePaletteHex = false;
+      S.extractedTags = [];
+      // Clear enhanced prompt state
+      S.lastEnhancedPrompt = '';
+      S.enhancedSettings = {};
+      document.getElementById('finalPrompt').value = '';
+    }
+
+    function applyExtractedScene(omega) {
+      // Reset everything first — clean slate
+      resetAllSettings();
+
+      // Mood tags — store for enhance context
+      if (omega.tags && omega.tags.length) {
+        S.extractedTags = [...omega.tags];
+      }
+
+      // Cinematography — exact values
+      if (omega.cinematography) {
+        const cin = omega.cinematography;
+        if (cin.format) { S.format = cin.format; S.enableFormat = true; }
+        if (cin.frame_size) { S.frameSize = cin.frame_size; S.enableFrameSize = true; }
+        if (cin.shot_type) { S.shotType = cin.shot_type; S.enableShotType = true; }
+        if (cin.lens_size) { S.lensSize = cin.lens_size; S.enableLensSize = true; }
+        if (cin.composition && cin.composition.length) {
+          S.composition = [...cin.composition];
+          S.enableComposition = true;
+        }
+        // Match aspect ratio if provided
+        if (cin.aspect_ratio) {
+          const arMatch = ASPECT_RATIOS.findIndex(a =>
+            cin.aspect_ratio.toLowerCase().includes(a.label.toLowerCase())
+          );
+          if (arMatch >= 0) {
+            S.aspectRatio = arMatch;
+            renderAspectGrid();
+            updatePreviewSize();
+          }
+        }
+      }
+
+      // Lighting — exact values
+      if (omega.lighting) {
+        if (omega.lighting.description && omega.lighting.description.length) {
+          S.lightingDesc = [...omega.lighting.description];
+          S.enableLightingDesc = true;
+        }
+        if (omega.lighting.type) { S.lightingType = omega.lighting.type; S.enableLightingType = true; }
+      }
+
+      // Environment — exact values
+      if (omega.time_of_day) { S.timeOfDay = omega.time_of_day; S.enableTimeOfDay = true; }
+      if (omega.interior_exterior) { S.intExt = omega.interior_exterior; S.enableIntExt = true; }
+      if (omega.location_type) { S.locationType = omega.location_type; S.enableLocationType = true; }
+      if (omega.set) { S.set = omega.set; S.enableSet = true; }
+      if (omega.time_period) { S.timePeriod = omega.time_period; S.enableTimePeriod = true; }
+
+      // Equipment — exact values (take first from arrays)
+      if (omega.equipment) {
+        if (omega.equipment.camera && omega.equipment.camera.length) {
+          S.camera = omega.equipment.camera[0];
+          S.enableCamera = true;
+        }
+        if (omega.equipment.lens && omega.equipment.lens.length) {
+          S.lens = omega.equipment.lens[0];
+          S.enableLens = true;
+        }
+        if (omega.equipment.film_stock && omega.equipment.film_stock.length) {
+          S.filmStock = omega.equipment.film_stock[0];
+          S.enableFilmStock = true;
+        }
+      }
+
+      // Visuals — exact values
+      if (omega.visuals) {
+        if (omega.visuals.color && omega.visuals.color.length) {
+          S.colors = [...omega.visuals.color];
+          S.enableColors = true;
+        }
+        if (omega.visuals.palette_hex && omega.visuals.palette_hex.length) {
+          S.paletteHex = [...omega.visuals.palette_hex];
+          S.enablePaletteHex = true;
+        }
+      }
+
+      // Enable master toggle
+      S.useCameraSettings = true;
+      document.getElementById('useCameraSettingsToggle').checked = true;
+
+      // Re-render everything
+      renderAllSettings();
+      rebuildPrompt();
+    }
+
+    // ══════════════════════════════════════════
+    //  BOOT
+    // ══════════════════════════════════════════
+    window.addEventListener('load', init);
+  </script>
+</body>
+
+</html>
